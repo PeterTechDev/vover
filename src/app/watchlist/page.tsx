@@ -2,18 +2,32 @@
 
 import { useState, useEffect } from "react";
 import { MediaCard } from "@/components/media-card";
+import { RecommendationsInbox } from "@/components/recommendations-inbox";
 import { List, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/search-bar";
 import { supabase } from "@/lib/supabase";
-import { getWatchlist, removeFromWatchlist } from "@/lib/db";
-import type { Database } from "@/types/database";
+import { getWatchlistWithRecommender, removeFromWatchlist, getRecommendationsForUser, getWatched } from "@/lib/db";
 import Link from "next/link";
 
-type WatchlistItem = Database["public"]["Tables"]["watchlist"]["Row"];
+interface WatchlistItemWithRecommender {
+  id: string;
+  user_id: string;
+  tmdb_id: number;
+  media_type: "movie" | "tv";
+  title: string;
+  poster_path: string | null;
+  added_at: string;
+  recommended_by: string | null;
+  recommender: { id: string; name: string | null } | null;
+}
 
 export default function WatchlistPage() {
-  const [items, setItems] = useState<WatchlistItem[]>([]);
+  const [items, setItems] = useState<WatchlistItemWithRecommender[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [watchlistKeys, setWatchlistKeys] = useState<Set<string>>(new Set());
+  const [watchedKeys, setWatchedKeys] = useState<Set<string>>(new Set());
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,8 +35,23 @@ export default function WatchlistPage() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
         setUserId(user.id);
-        const { data } = await getWatchlist(user.id);
-        setItems(data || []);
+
+        const [watchlistRes, recsRes, watchedRes] = await Promise.all([
+          getWatchlistWithRecommender(user.id),
+          getRecommendationsForUser(user.id),
+          getWatched(user.id),
+        ]);
+
+        const watchlistData = (watchlistRes.data || []) as WatchlistItemWithRecommender[];
+        setItems(watchlistData);
+        setRecommendations(recsRes.data || []);
+
+        // Build sets of tmdbId-mediaType keys for quick lookup
+        const wlKeys = new Set(watchlistData.map((i) => `${i.tmdb_id}-${i.media_type}`));
+        setWatchlistKeys(wlKeys);
+
+        const wKeys = new Set((watchedRes.data || []).map((i) => `${i.tmdb_id}-${i.media_type}`));
+        setWatchedKeys(wKeys);
       }
       setLoading(false);
     });
@@ -63,6 +92,16 @@ export default function WatchlistPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      {/* Recommendations preview — max 3, link to full page */}
+      <RecommendationsInbox
+        recommendations={recommendations}
+        userId={userId}
+        watchlistTmdbIds={watchlistKeys}
+        watchedTmdbIds={watchedKeys}
+        maxItems={3}
+      />
+
+      {/* User's Watchlist */}
       <div className="mb-8 flex items-center gap-2">
         <List className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Watchlist</h1>
@@ -78,6 +117,7 @@ export default function WatchlistPage() {
                 mediaType={item.media_type}
                 title={item.title}
                 posterPath={item.poster_path}
+                recommendedBy={item.recommender?.name}
               />
               <Button
                 variant="destructive"

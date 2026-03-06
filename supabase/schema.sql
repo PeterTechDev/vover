@@ -173,3 +173,8 @@ create policy "Users can send recommendations to friends" on public.recommendati
 
 create index if not exists recommendations_to_user_idx on public.recommendations(to_user_id);
 create index if not exists recommendations_from_user_idx on public.recommendations(from_user_id);
+
+-- ─── Migration: Add recommended_by to watchlist ───────────────────────────────
+-- Run this in Supabase SQL Editor for existing databases:
+-- https://supabase.com/dashboard/project/rdujyhbnhibesivjncks/sql
+alter table public.watchlist add column if not exists recommended_by uuid references public.profiles(id);

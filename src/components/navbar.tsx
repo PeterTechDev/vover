@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Film, List, Eye, Rss, User, Menu } from "lucide-react";
+import { Film, List, Eye, Rss, User, Menu, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navLinks = [
   { href: "/", label: "Discover", icon: Film },
+  { href: "/recommendations", label: "For You", icon: Sparkles },
   { href: "/watchlist", label: "Watchlist", icon: List },
   { href: "/watched", label: "Watched", icon: Eye },
   { href: "/feed", label: "Feed", icon: Rss },

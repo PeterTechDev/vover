@@ -30,6 +30,7 @@ export type Database = {
           title: string;
           poster_path: string | null;
           added_at: string;
+          recommended_by: string | null;
         };
         Insert: {
           id?: string;
@@ -39,6 +40,7 @@ export type Database = {
           title: string;
           poster_path?: string | null;
           added_at?: string;
+          recommended_by?: string | null;
         };
         Update: {
           id?: string;
@@ -48,6 +50,7 @@ export type Database = {
           title?: string;
           poster_path?: string | null;
           added_at?: string;
+          recommended_by?: string | null;
         };
       };
       watched: {

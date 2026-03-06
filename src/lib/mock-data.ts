@@ -19,10 +19,10 @@ export const mockFriends: Profile[] = [
 ];
 
 export const mockWatchlist: WatchlistItem[] = [
-  { id: "w1", user_id: "mock-user-1", tmdb_id: 550, media_type: "movie", title: "Fight Club", poster_path: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg", added_at: "2025-03-01T10:00:00Z" },
-  { id: "w2", user_id: "mock-user-1", tmdb_id: 680, media_type: "movie", title: "Pulp Fiction", poster_path: "/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg", added_at: "2025-03-02T10:00:00Z" },
-  { id: "w3", user_id: "mock-user-1", tmdb_id: 1396, media_type: "tv", title: "Breaking Bad", poster_path: "/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg", added_at: "2025-03-03T10:00:00Z" },
-  { id: "w4", user_id: "mock-user-1", tmdb_id: 299534, media_type: "movie", title: "Avengers: Endgame", poster_path: "/or06FN3Dka5tukK1e9sl16pB3iy.jpg", added_at: "2025-03-04T10:00:00Z" },
+  { id: "w1", user_id: "mock-user-1", tmdb_id: 550, media_type: "movie", title: "Fight Club", poster_path: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg", added_at: "2025-03-01T10:00:00Z", recommended_by: null },
+  { id: "w2", user_id: "mock-user-1", tmdb_id: 680, media_type: "movie", title: "Pulp Fiction", poster_path: "/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg", added_at: "2025-03-02T10:00:00Z", recommended_by: null },
+  { id: "w3", user_id: "mock-user-1", tmdb_id: 1396, media_type: "tv", title: "Breaking Bad", poster_path: "/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg", added_at: "2025-03-03T10:00:00Z", recommended_by: null },
+  { id: "w4", user_id: "mock-user-1", tmdb_id: 299534, media_type: "movie", title: "Avengers: Endgame", poster_path: "/or06FN3Dka5tukK1e9sl16pB3iy.jpg", added_at: "2025-03-04T10:00:00Z", recommended_by: null },
 ];
 
 export const mockWatched: WatchedItem[] = [

@@ -14,7 +14,7 @@ export async function getWatchlist(userId: string) {
 
 export async function addToWatchlist(
   userId: string,
-  item: { tmdb_id: number; media_type: "movie" | "tv"; title: string; poster_path: string | null }
+  item: { tmdb_id: number; media_type: "movie" | "tv"; title: string; poster_path: string | null; recommended_by?: string | null }
 ) {
   const { data, error } = await supabase
     .from("watchlist")
@@ -166,5 +166,25 @@ export async function updateProfile(userId: string, updates: { name?: string; av
     .eq("id", userId)
     .select()
     .single();
+  return { data, error };
+}
+
+// ─── Recommendations ──────────────────────────────────────────────────────────
+
+export async function getRecommendationsForUser(userId: string) {
+  const { data, error } = await supabase
+    .from("recommendations")
+    .select("*, from_user:profiles!recommendations_from_user_id_fkey(id, name, avatar_url)")
+    .eq("to_user_id", userId)
+    .order("created_at", { ascending: false });
+  return { data, error };
+}
+
+export async function getWatchlistWithRecommender(userId: string) {
+  const { data, error } = await supabase
+    .from("watchlist")
+    .select("*, recommender:profiles!watchlist_recommended_by_fkey(id, name)")
+    .eq("user_id", userId)
+    .order("added_at", { ascending: false });
   return { data, error };
 }

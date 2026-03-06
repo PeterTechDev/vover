@@ -12,9 +12,10 @@ interface MediaCardProps {
   rating?: number | null;
   year?: string | null;
   voteAverage?: number | null;
+  recommendedBy?: string | null;
 }
 
-export function MediaCard({ tmdbId, mediaType, title, posterPath, rating, year, voteAverage }: MediaCardProps) {
+export function MediaCard({ tmdbId, mediaType, title, posterPath, rating, year, voteAverage, recommendedBy }: MediaCardProps) {
   return (
     <Link
       href={`/${mediaType}/${tmdbId}`}
@@ -42,6 +43,11 @@ export function MediaCard({ tmdbId, mediaType, title, posterPath, rating, year, 
       </div>
       <div className="flex flex-1 flex-col gap-1 p-3">
         <h3 className="line-clamp-2 text-sm font-medium leading-tight">{title}</h3>
+        {recommendedBy && (
+          <span className="inline-flex items-center gap-1 truncate max-w-full rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+            Recommended by {recommendedBy}
+          </span>
+        )}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {year && <span>{year}</span>}
           {rating != null && (
