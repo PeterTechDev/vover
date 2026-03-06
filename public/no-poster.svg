@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750" fill="none">
+  <rect width="500" height="750" fill="#16161A"/>
+  <path d="M220 345 L280 345 L280 405 L220 405 Z" stroke="#555" stroke-width="2" fill="none"/>
+  <circle cx="240" cy="365" r="6" fill="#555"/>
+  <path d="M222 400 L248 380 L262 392 L270 386 L278 400" stroke="#555" stroke-width="2" fill="none"/>
+  <text x="250" y="440" text-anchor="middle" fill="#555" font-family="system-ui" font-size="14">No poster available</text>
+</svg>
