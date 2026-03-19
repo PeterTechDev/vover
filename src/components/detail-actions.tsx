@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "@/components/star-rating";
+import { RecommendModal } from "@/components/recommend-modal";
 import { Plus, Eye, Send, Check, LogIn } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { addToWatchlist, markWatched, isInWatchlist, getFriends } from "@/lib/db";
@@ -31,9 +32,7 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
   const [watchedRating, setWatchedRating] = useState(0);
   const [watchedNote, setWatchedNote] = useState("");
   const [watchedDialogOpen, setWatchedDialogOpen] = useState(false);
-  const [recommendNote, setRecommendNote] = useState("");
-  const [recommendSent, setRecommendSent] = useState(false);
-  const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
+  const [recommendOpen, setRecommendOpen] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -41,9 +40,7 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user) {
         setUserId(user.id);
-        // Check if already in watchlist
         isInWatchlist(user.id, tmdbId, mediaType).then(setAddedToWatchlist);
-        // Load real friends
         const { data: friendships } = await getFriends(user.id);
         if (friendships) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -95,33 +92,6 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
     setLoading(false);
   }
 
-  async function handleRecommend() {
-    if (!userId || !selectedFriendId) return;
-    setLoading(true);
-
-    const { error } = await supabase
-      .from("recommendations")
-      .insert({
-        from_user_id: userId,
-        to_user_id: selectedFriendId,
-        tmdb_id: tmdbId,
-        media_type: mediaType,
-        title,
-        poster_path: posterPath,
-        note: recommendNote || null,
-      });
-
-    if (!error) {
-      setRecommendSent(true);
-      setRecommendNote("");
-      const friendName = friends.find((f) => f.id === selectedFriendId)?.name || "friend";
-      toast.success(`Recommendation sent to ${friendName}!`);
-    } else {
-      toast.error("Failed to send recommendation");
-    }
-    setLoading(false);
-  }
-
   if (!userId) {
     return (
       <div className="flex items-center gap-3 pt-2">
@@ -135,6 +105,7 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
 
   return (
     <div className="flex flex-wrap gap-3 pt-2">
+      {/* Add to Watchlist */}
       <Button
         variant={addedToWatchlist ? "secondary" : "default"}
         onClick={handleAddToWatchlist}
@@ -142,14 +113,15 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
         className="gap-2"
       >
         {addedToWatchlist ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-        {addedToWatchlist ? "Added to Watchlist" : "Add to Watchlist"}
+        {addedToWatchlist ? "In Watchlist" : "Add to Watchlist"}
       </Button>
 
+      {/* Mark as Watched */}
       <Dialog open={watchedDialogOpen} onOpenChange={setWatchedDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="secondary" className="gap-2" disabled={markedWatched} onClick={() => setWatchedDialogOpen(true)}>
+          <Button variant="secondary" className="gap-2" disabled={markedWatched}>
             {markedWatched ? <Check className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            {markedWatched ? "Marked Watched" : "Mark as Watched"}
+            {markedWatched ? "Watched" : "Mark as Watched"}
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-md">
@@ -177,64 +149,29 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
         </DialogContent>
       </Dialog>
 
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="outline" className="gap-2">
-            <Send className="h-4 w-4" />
-            Recommend to Friend
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Recommend {title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            {recommendSent ? (
-              <div className="flex flex-col items-center gap-2 py-4">
-                <Check className="h-8 w-8 text-primary" />
-                <p className="text-sm text-muted-foreground">Recommendation sent!</p>
-              </div>
-            ) : friends.length > 0 ? (
-              <>
-                <div>
-                  <p className="mb-2 text-sm text-muted-foreground">Pick a friend:</p>
-                  <div className="flex flex-col gap-2">
-                    {friends.map((friend) => (
-                      <Button
-                        key={friend.id}
-                        variant={selectedFriendId === friend.id ? "default" : "outline"}
-                        size="sm"
-                        className="justify-start"
-                        onClick={() => setSelectedFriendId(friend.id)}
-                      >
-                        {selectedFriendId === friend.id && <Check className="mr-2 h-3.5 w-3.5" />}
-                        {friend.name}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-2 text-sm text-muted-foreground">Why should they watch it?</p>
-                  <Textarea
-                    placeholder="You'll love this because..."
-                    value={recommendNote}
-                    onChange={(e) => setRecommendNote(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-                <Button onClick={handleRecommend} className="w-full gap-2" disabled={!selectedFriendId || loading}>
-                  <Send className="h-4 w-4" />
-                  {loading ? "Sending..." : "Send Recommendation"}
-                </Button>
-              </>
-            ) : (
-              <div className="flex flex-col items-center gap-2 py-4 text-center">
-                <p className="text-sm text-muted-foreground">No friends yet. Add friends from your profile to recommend titles.</p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Recommend — one-tap modal */}
+      <Button
+        variant="outline"
+        className="gap-2"
+        onClick={() => {
+          if (!userId) return requireAuth();
+          setRecommendOpen(true);
+        }}
+      >
+        <Send className="h-4 w-4" />
+        Recommend
+      </Button>
+
+      <RecommendModal
+        open={recommendOpen}
+        onOpenChange={setRecommendOpen}
+        tmdbId={tmdbId}
+        mediaType={mediaType}
+        title={title}
+        posterPath={posterPath}
+        friends={friends}
+        userId={userId}
+      />
     </div>
   );
 }
