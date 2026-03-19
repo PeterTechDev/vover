@@ -178,3 +178,142 @@ create index if not exists recommendations_from_user_idx on public.recommendatio
 -- Run this in Supabase SQL Editor for existing databases:
 -- https://supabase.com/dashboard/project/rdujyhbnhibesivjncks/sql
 alter table public.watchlist add column if not exists recommended_by uuid references public.profiles(id);
+
+-- ─────────────────────────────────────────────
+-- SHARED LISTS
+-- ─────────────────────────────────────────────
+create table if not exists public.shared_lists (
+  id uuid default gen_random_uuid() primary key,
+  created_by uuid references public.profiles(id) on delete cascade not null,
+  name text not null,
+  description text,
+  created_at timestamptz default now() not null
+);
+
+alter table public.shared_lists enable row level security;
+
+create policy "Members can view shared lists" on public.shared_lists
+  for select using (
+    auth.uid() = created_by
+    or exists (
+      select 1 from public.shared_list_members
+      where list_id = id and user_id = auth.uid()
+    )
+  );
+
+create policy "Users can create lists" on public.shared_lists
+  for insert with check (auth.uid() = created_by);
+
+create policy "Creators can update their lists" on public.shared_lists
+  for update using (auth.uid() = created_by);
+
+create policy "Creators can delete their lists" on public.shared_lists
+  for delete using (auth.uid() = created_by);
+
+-- ─────────────────────────────────────────────
+-- SHARED LIST MEMBERS
+-- ─────────────────────────────────────────────
+create table if not exists public.shared_list_members (
+  id uuid default gen_random_uuid() primary key,
+  list_id uuid references public.shared_lists(id) on delete cascade not null,
+  user_id uuid references public.profiles(id) on delete cascade not null,
+  invited_by uuid references public.profiles(id) on delete set null,
+  joined_at timestamptz default now() not null,
+  unique (list_id, user_id)
+);
+
+alter table public.shared_list_members enable row level security;
+
+create policy "Members can view list members" on public.shared_list_members
+  for select using (
+    user_id = auth.uid()
+    or exists (
+      select 1 from public.shared_list_members m2
+      where m2.list_id = list_id and m2.user_id = auth.uid()
+    )
+    or exists (
+      select 1 from public.shared_lists sl
+      where sl.id = list_id and sl.created_by = auth.uid()
+    )
+  );
+
+create policy "List creators can add members" on public.shared_list_members
+  for insert with check (
+    exists (
+      select 1 from public.shared_lists
+      where id = list_id and created_by = auth.uid()
+    )
+    or exists (
+      select 1 from public.shared_list_members m2
+      where m2.list_id = list_id and m2.user_id = auth.uid()
+    )
+  );
+
+create policy "Members can leave lists" on public.shared_list_members
+  for delete using (user_id = auth.uid());
+
+create policy "Creators can remove members" on public.shared_list_members
+  for delete using (
+    exists (
+      select 1 from public.shared_lists
+      where id = list_id and created_by = auth.uid()
+    )
+  );
+
+create index if not exists shared_list_members_list_id_idx on public.shared_list_members(list_id);
+create index if not exists shared_list_members_user_id_idx on public.shared_list_members(user_id);
+
+-- ─────────────────────────────────────────────
+-- SHARED LIST ITEMS
+-- ─────────────────────────────────────────────
+create table if not exists public.shared_list_items (
+  id uuid default gen_random_uuid() primary key,
+  list_id uuid references public.shared_lists(id) on delete cascade not null,
+  added_by uuid references public.profiles(id) on delete cascade not null,
+  tmdb_id integer not null,
+  media_type text check (media_type in ('movie', 'tv')) not null,
+  title text not null,
+  poster_path text,
+  added_at timestamptz default now() not null,
+  unique (list_id, tmdb_id, media_type)
+);
+
+alter table public.shared_list_items enable row level security;
+
+create policy "Members can view list items" on public.shared_list_items
+  for select using (
+    exists (
+      select 1 from public.shared_list_members
+      where list_id = shared_list_items.list_id and user_id = auth.uid()
+    )
+    or exists (
+      select 1 from public.shared_lists
+      where id = shared_list_items.list_id and created_by = auth.uid()
+    )
+  );
+
+create policy "Members can add items to lists" on public.shared_list_items
+  for insert with check (
+    auth.uid() = added_by
+    and (
+      exists (
+        select 1 from public.shared_list_members
+        where list_id = shared_list_items.list_id and user_id = auth.uid()
+      )
+      or exists (
+        select 1 from public.shared_lists
+        where id = shared_list_items.list_id and created_by = auth.uid()
+      )
+    )
+  );
+
+create policy "Item adders and list creators can remove items" on public.shared_list_items
+  for delete using (
+    auth.uid() = added_by
+    or exists (
+      select 1 from public.shared_lists
+      where id = list_id and created_by = auth.uid()
+    )
+  );
+
+create index if not exists shared_list_items_list_id_idx on public.shared_list_items(list_id);

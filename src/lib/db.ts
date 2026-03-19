@@ -188,3 +188,202 @@ export async function getWatchlistWithRecommender(userId: string) {
     .order("added_at", { ascending: false });
   return { data, error };
 }
+
+// ─── Shared Lists ─────────────────────────────────────────────────────────────
+
+export async function getSharedLists(userId: string) {
+  // Lists I created or am a member of
+  const { data: memberListIds } = await supabase
+    .from("shared_list_members")
+    .select("list_id")
+    .eq("user_id", userId);
+
+  const memberIds = (memberListIds || []).map((m) => m.list_id);
+
+  const { data, error } = await supabase
+    .from("shared_lists")
+    .select(`
+      *,
+      creator:profiles!shared_lists_created_by_fkey(id, name, avatar_url),
+      members:shared_list_members(
+        id,
+        user_id,
+        profile:profiles!shared_list_members_user_id_fkey(id, name, avatar_url)
+      ),
+      items:shared_list_items(id)
+    `)
+    .or(
+      memberIds.length > 0
+        ? `created_by.eq.${userId},id.in.(${memberIds.join(",")})`
+        : `created_by.eq.${userId}`
+    )
+    .order("created_at", { ascending: false });
+
+  return { data, error };
+}
+
+export async function getSharedListById(listId: string) {
+  const { data, error } = await supabase
+    .from("shared_lists")
+    .select(`
+      *,
+      creator:profiles!shared_lists_created_by_fkey(id, name, avatar_url),
+      members:shared_list_members(
+        id,
+        user_id,
+        profile:profiles!shared_list_members_user_id_fkey(id, name, avatar_url)
+      )
+    `)
+    .eq("id", listId)
+    .single();
+  return { data, error };
+}
+
+export async function getSharedListItems(listId: string) {
+  const { data, error } = await supabase
+    .from("shared_list_items")
+    .select(`
+      *,
+      adder:profiles!shared_list_items_added_by_fkey(id, name)
+    `)
+    .eq("list_id", listId)
+    .order("added_at", { ascending: false });
+  return { data, error };
+}
+
+export async function createSharedList(userId: string, name: string, description?: string) {
+  const { data, error } = await supabase
+    .from("shared_lists")
+    .insert({ created_by: userId, name, description: description || null })
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function addMemberToList(listId: string, userId: string, invitedBy: string) {
+  const { data, error } = await supabase
+    .from("shared_list_members")
+    .insert({ list_id: listId, user_id: userId, invited_by: invitedBy })
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function addItemToSharedList(
+  listId: string,
+  userId: string,
+  item: { tmdb_id: number; media_type: "movie" | "tv"; title: string; poster_path: string | null }
+) {
+  const { data, error } = await supabase
+    .from("shared_list_items")
+    .insert({ list_id: listId, added_by: userId, ...item })
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function removeItemFromSharedList(itemId: string) {
+  const { error } = await supabase.from("shared_list_items").delete().eq("id", itemId);
+  return { error };
+}
+
+export async function deleteSharedList(listId: string) {
+  const { error } = await supabase.from("shared_lists").delete().eq("id", listId);
+  return { error };
+}
+
+export async function getFriendsByUserId(userId: string) {
+  const { data, error } = await supabase
+    .from("friendships")
+    .select(`
+      id,
+      requester_id,
+      addressee_id,
+      requester:profiles!friendships_requester_id_fkey(id, name, avatar_url),
+      addressee:profiles!friendships_addressee_id_fkey(id, name, avatar_url)
+    `)
+    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+    .eq("status", "accepted");
+  return { data, error };
+}
+
+// ─── Enhanced Feed ────────────────────────────────────────────────────────────
+
+export async function getEnhancedFriendActivity(userId: string) {
+  // Get accepted friend IDs
+  const { data: friendships } = await supabase
+    .from("friendships")
+    .select("requester_id, addressee_id")
+    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
+    .eq("status", "accepted");
+
+  if (!friendships?.length) return { data: [], error: null };
+
+  const friendIds = friendships.map((f) =>
+    f.requester_id === userId ? f.addressee_id : f.requester_id
+  );
+
+  // Fetch watched activity from friends
+  const { data: watched } = await supabase
+    .from("watched")
+    .select("id, tmdb_id, media_type, title, poster_path, rating, note, watched_at, user_id, user:profiles!watched_user_id_fkey(id, name, avatar_url)")
+    .in("user_id", friendIds)
+    .order("watched_at", { ascending: false })
+    .limit(20);
+
+  // Fetch recommendations sent BY friends or TO friends (visible to current user)
+  const { data: recs } = await supabase
+    .from("recommendations")
+    .select("id, tmdb_id, media_type, title, poster_path, note, created_at, from_user_id, to_user_id, from_user:profiles!recommendations_from_user_id_fkey(id, name, avatar_url), to_user:profiles!recommendations_to_user_id_fkey(id, name, avatar_url)")
+    .or(`from_user_id.in.(${friendIds.join(",")}),to_user_id.in.(${friendIds.join(",")})`)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  // Normalize into a unified activity list
+  type ActivityItem = {
+    id: string;
+    type: "watched" | "recommended";
+    timestamp: string;
+    tmdb_id: number;
+    media_type: "movie" | "tv";
+    title: string;
+    poster_path: string | null;
+    rating?: number | null;
+    note?: string | null;
+    actor: { id: string; name: string | null; avatar_url: string | null } | null;
+    recipient?: { id: string; name: string | null; avatar_url: string | null } | null;
+  };
+
+  const activities: ActivityItem[] = [
+    ...((watched || []).map((w) => ({
+      id: `watched-${w.id}`,
+      type: "watched" as const,
+      timestamp: w.watched_at,
+      tmdb_id: w.tmdb_id,
+      media_type: w.media_type as "movie" | "tv",
+      title: w.title,
+      poster_path: w.poster_path,
+      rating: w.rating,
+      note: w.note,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      actor: (w as any).user,
+    }))),
+    ...((recs || []).map((r) => ({
+      id: `rec-${r.id}`,
+      type: "recommended" as const,
+      timestamp: r.created_at,
+      tmdb_id: r.tmdb_id,
+      media_type: r.media_type as "movie" | "tv",
+      title: r.title,
+      poster_path: r.poster_path,
+      note: r.note,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      actor: (r as any).from_user,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recipient: (r as any).to_user,
+    }))),
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 40);
+
+  return { data: activities, error: null };
+}
