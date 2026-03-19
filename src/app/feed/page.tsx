@@ -53,10 +53,11 @@ export default function FeedPage() {
     });
   }, []);
 
-  if (!signedIn) {
-    router.push("/auth");
-    return null;
-  }
+  useEffect(() => {
+    if (!signedIn) {
+      router.push("/auth");
+    }
+  }, [signedIn, router]);
 
   if (loading) {
     return (

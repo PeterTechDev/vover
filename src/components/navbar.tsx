@@ -6,7 +6,7 @@ import { Film, List, Eye, Rss, User, Menu, Sparkles, LogIn, LogOut } from "lucid
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/lib/supabase";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
@@ -116,6 +116,7 @@ export function Navbar() {
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-64 bg-background">
+            <SheetTitle className="sr-only">Navigation menu</SheetTitle>
             <nav className="mt-8 flex flex-col gap-2">
               {links.map((link) => {
                 const Icon = link.icon;

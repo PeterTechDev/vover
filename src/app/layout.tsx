@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -53,6 +54,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <Navbar />
         <main className="min-h-screen pt-16">{children}</main>
+        <Footer />
         <Toaster theme="dark" position="bottom-right" richColors />
       </body>
     </html>
