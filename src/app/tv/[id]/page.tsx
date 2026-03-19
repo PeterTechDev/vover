@@ -1,9 +1,35 @@
+import { Metadata } from "next";
 import Image from "next/image";
 import { getTVShow, posterUrl, backdropUrl } from "@/lib/tmdb";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Star, Tv } from "lucide-react";
 import { DetailActions } from "@/components/detail-actions";
 import { notFound } from "next/navigation";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const id = Number(params.id);
+  if (isNaN(id)) return { title: "TV Show" };
+  try {
+    const show = await getTVShow(id);
+    return {
+      title: show.name,
+      description: show.overview?.slice(0, 160) || `Watch ${show.name} on Vover.`,
+      openGraph: {
+        title: show.name,
+        description: show.overview?.slice(0, 160) || undefined,
+        images: show.poster_path
+          ? [`https://image.tmdb.org/t/p/w500${show.poster_path}`]
+          : undefined,
+      },
+    };
+  } catch {
+    return { title: "TV Show" };
+  }
+}
 
 export default async function TVDetailPage({
   params,
@@ -38,23 +64,29 @@ export default async function TVDetailPage({
       )}
 
       <div className="mx-auto max-w-7xl px-4">
-        <div className={`flex flex-col gap-8 md:flex-row ${backdrop ? "-mt-32 relative z-10" : "pt-8"}`}>
+        <div
+          className={`flex flex-col gap-8 md:flex-row ${
+            backdrop ? "-mt-32 relative z-10" : "pt-8"
+          }`}
+        >
           <div className="flex-shrink-0">
             <Image
               src={posterUrl(show.poster_path)}
               alt={show.name}
               width={300}
               height={450}
-              className="rounded-lg shadow-2xl"
+              className="rounded-xl shadow-2xl shadow-black/50"
               priority
             />
           </div>
 
-          <div className="flex flex-1 flex-col gap-4">
+          <div className="flex flex-1 flex-col gap-4 pb-12">
             <div>
               <h1 className="text-3xl font-bold md:text-4xl">{show.name}</h1>
               {show.tagline && (
-                <p className="mt-1 text-lg italic text-muted-foreground">{show.tagline}</p>
+                <p className="mt-1 text-base italic text-muted-foreground">
+                  {show.tagline}
+                </p>
               )}
             </div>
 
@@ -67,12 +99,17 @@ export default async function TVDetailPage({
               )}
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Tv className="h-4 w-4" />
-                {show.number_of_seasons} season{show.number_of_seasons !== 1 ? "s" : ""} ({show.number_of_episodes} episodes)
+                {show.number_of_seasons} season
+                {show.number_of_seasons !== 1 ? "s" : ""} (
+                {show.number_of_episodes} episodes)
               </div>
               {show.vote_average > 0 && (
                 <div className="flex items-center gap-1.5 text-sm">
                   <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                  {show.vote_average.toFixed(1)} ({show.vote_count.toLocaleString()} votes)
+                  {show.vote_average.toFixed(1)}{" "}
+                  <span className="text-muted-foreground">
+                    ({show.vote_count.toLocaleString()} votes)
+                  </span>
                 </div>
               )}
             </div>

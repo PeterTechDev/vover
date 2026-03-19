@@ -1,9 +1,35 @@
+import { Metadata } from "next";
 import Image from "next/image";
 import { getMovie, posterUrl, backdropUrl } from "@/lib/tmdb";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Calendar, Star } from "lucide-react";
 import { DetailActions } from "@/components/detail-actions";
 import { notFound } from "next/navigation";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const id = Number(params.id);
+  if (isNaN(id)) return { title: "Movie" };
+  try {
+    const movie = await getMovie(id);
+    return {
+      title: movie.title,
+      description: movie.overview?.slice(0, 160) || `Watch ${movie.title} on Vover.`,
+      openGraph: {
+        title: movie.title,
+        description: movie.overview?.slice(0, 160) || undefined,
+        images: movie.poster_path
+          ? [`https://image.tmdb.org/t/p/w500${movie.poster_path}`]
+          : undefined,
+      },
+    };
+  } catch {
+    return { title: "Movie" };
+  }
+}
 
 export default async function MovieDetailPage({
   params,
@@ -38,23 +64,29 @@ export default async function MovieDetailPage({
       )}
 
       <div className="mx-auto max-w-7xl px-4">
-        <div className={`flex flex-col gap-8 md:flex-row ${backdrop ? "-mt-32 relative z-10" : "pt-8"}`}>
+        <div
+          className={`flex flex-col gap-8 md:flex-row ${
+            backdrop ? "-mt-32 relative z-10" : "pt-8"
+          }`}
+        >
           <div className="flex-shrink-0">
             <Image
               src={posterUrl(movie.poster_path)}
               alt={movie.title}
               width={300}
               height={450}
-              className="rounded-lg shadow-2xl"
+              className="rounded-xl shadow-2xl shadow-black/50"
               priority
             />
           </div>
 
-          <div className="flex flex-1 flex-col gap-4">
+          <div className="flex flex-1 flex-col gap-4 pb-12">
             <div>
               <h1 className="text-3xl font-bold md:text-4xl">{movie.title}</h1>
               {movie.tagline && (
-                <p className="mt-1 text-lg italic text-muted-foreground">{movie.tagline}</p>
+                <p className="mt-1 text-base italic text-muted-foreground">
+                  {movie.tagline}
+                </p>
               )}
             </div>
 
@@ -74,7 +106,10 @@ export default async function MovieDetailPage({
               {movie.vote_average > 0 && (
                 <div className="flex items-center gap-1.5 text-sm">
                   <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                  {movie.vote_average.toFixed(1)} ({movie.vote_count.toLocaleString()} votes)
+                  {movie.vote_average.toFixed(1)}{" "}
+                  <span className="text-muted-foreground">
+                    ({movie.vote_count.toLocaleString()} votes)
+                  </span>
                 </div>
               )}
             </div>
