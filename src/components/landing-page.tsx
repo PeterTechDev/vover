@@ -187,7 +187,7 @@ export async function LandingPage() {
             </p>
           </div>
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (

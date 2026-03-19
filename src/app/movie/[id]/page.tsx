@@ -69,15 +69,17 @@ export default async function MovieDetailPage({
             backdrop ? "-mt-32 relative z-10" : "pt-8"
           }`}
         >
-          <div className="flex-shrink-0">
-            <Image
-              src={posterUrl(movie.poster_path)}
-              alt={movie.title}
-              width={300}
-              height={450}
-              className="rounded-xl shadow-2xl shadow-black/50"
-              priority
-            />
+          <div className="flex-shrink-0 flex justify-center md:justify-start">
+            <div className="relative w-[160px] md:w-[300px]">
+              <Image
+                src={posterUrl(movie.poster_path)}
+                alt={movie.title}
+                width={300}
+                height={450}
+                className="rounded-xl shadow-2xl shadow-black/50 w-full h-auto"
+                priority
+              />
+            </div>
           </div>
 
           <div className="flex flex-1 flex-col gap-4 pb-12">

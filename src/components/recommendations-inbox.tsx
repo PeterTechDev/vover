@@ -133,7 +133,7 @@ export function RecommendationsInbox({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {displayRecs.map((rec) => {
           const k = key(rec.tmdb_id, rec.media_type);
           const inWatchlist = watchlistIds.has(k);

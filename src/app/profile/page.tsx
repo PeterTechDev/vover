@@ -165,21 +165,21 @@ export default function ProfilePage() {
         </Button>
       </section>
 
-      <div className="grid grid-cols-3 gap-4 pb-8">
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-border/50 bg-card p-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 pb-8">
+        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4">
           <List className="h-5 w-5 text-primary" />
-          <span className="text-2xl font-bold">{watchlistCount}</span>
-          <span className="text-xs text-muted-foreground">Watchlist</span>
+          <span className="text-xl sm:text-2xl font-bold">{watchlistCount}</span>
+          <span className="text-[11px] sm:text-xs text-muted-foreground">Watchlist</span>
         </div>
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-border/50 bg-card p-4">
+        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4">
           <Eye className="h-5 w-5 text-primary" />
-          <span className="text-2xl font-bold">{watchedCount}</span>
-          <span className="text-xs text-muted-foreground">Watched</span>
+          <span className="text-xl sm:text-2xl font-bold">{watchedCount}</span>
+          <span className="text-[11px] sm:text-xs text-muted-foreground">Watched</span>
         </div>
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-border/50 bg-card p-4">
+        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4">
           <Star className="h-5 w-5 text-primary" />
-          <span className="text-2xl font-bold">{avgRating.toFixed(1)}</span>
-          <span className="text-xs text-muted-foreground">Avg Rating</span>
+          <span className="text-xl sm:text-2xl font-bold">{avgRating.toFixed(1)}</span>
+          <span className="text-[11px] sm:text-xs text-muted-foreground">Avg Rating</span>
         </div>
       </div>
 

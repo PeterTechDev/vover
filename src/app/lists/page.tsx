@@ -66,7 +66,7 @@ export default function ListsPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <div className="h-8 w-40 bg-secondary/50 rounded animate-pulse mb-8" />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="h-32 rounded-lg bg-secondary/50 animate-pulse" />
           ))}
@@ -145,7 +145,7 @@ export default function ListsPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {lists.map((list) => {
             const isOwner = list.created_by === userId;
             const memberCount = list.members?.length || 0;
