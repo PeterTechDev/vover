@@ -15,25 +15,39 @@ interface MediaCardProps {
   recommendedBy?: string | null;
 }
 
-export function MediaCard({ tmdbId, mediaType, title, posterPath, rating, year, voteAverage, recommendedBy }: MediaCardProps) {
+export function MediaCard({
+  tmdbId,
+  mediaType,
+  title,
+  posterPath,
+  rating,
+  year,
+  voteAverage,
+  recommendedBy,
+}: MediaCardProps) {
   return (
     <Link
       href={`/${mediaType}/${tmdbId}`}
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-border/50 bg-card transition-all hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-border/50 bg-card transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-0.5"
     >
-      <div className="relative aspect-[2/3] w-full overflow-hidden">
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-secondary/30">
         <Image
           src={posterUrl(posterPath)}
           alt={title}
           fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
         />
-        {mediaType && (
-          <Badge className="absolute left-2 top-2 bg-background/80 text-xs backdrop-blur-sm">
-            {mediaType === "movie" ? "Movie" : "TV"}
-          </Badge>
-        )}
+
+        {/* Overlay gradient on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+        {/* Media type badge */}
+        <Badge className="absolute left-2 top-2 bg-background/80 text-[10px] backdrop-blur-sm">
+          {mediaType === "movie" ? "Movie" : "TV"}
+        </Badge>
+
+        {/* TMDB rating */}
         {voteAverage != null && voteAverage > 0 && (
           <div className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-background/80 px-1.5 py-0.5 text-xs backdrop-blur-sm">
             <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
@@ -41,13 +55,18 @@ export function MediaCard({ tmdbId, mediaType, title, posterPath, rating, year, 
           </div>
         )}
       </div>
+
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-2 text-sm font-medium leading-tight">{title}</h3>
+        <h3 className="line-clamp-2 text-sm font-medium leading-tight">
+          {title}
+        </h3>
+
         {recommendedBy && (
           <span className="inline-flex items-center gap-1 truncate max-w-full rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-            Recommended by {recommendedBy}
+            From {recommendedBy}
           </span>
         )}
+
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {year && <span>{year}</span>}
           {rating != null && (
@@ -55,7 +74,11 @@ export function MediaCard({ tmdbId, mediaType, title, posterPath, rating, year, 
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-3 w-3 ${i < rating ? "fill-primary text-primary" : "text-muted-foreground/30"}`}
+                  className={`h-3 w-3 ${
+                    i < rating
+                      ? "fill-primary text-primary"
+                      : "text-muted-foreground/30"
+                  }`}
                 />
               ))}
             </div>

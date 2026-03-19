@@ -1,0 +1,16 @@
+{
+  "name": "Vover",
+  "short_name": "Vover",
+  "description": "Social movie and TV recommendations from friends you trust.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090910",
+  "theme_color": "#7c5cbf",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
