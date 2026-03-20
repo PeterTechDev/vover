@@ -66,10 +66,10 @@ export default function WatchlistPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="h-8 w-48 bg-secondary/50 rounded animate-pulse mb-8" />
+        <div className="h-8 w-48 rounded animate-shimmer mb-8" />
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="aspect-[2/3] rounded-lg bg-secondary/50 animate-pulse" />
+            <div key={i} className="aspect-[2/3] rounded-lg animate-shimmer" />
           ))}
         </div>
       </div>
@@ -136,10 +136,14 @@ export default function WatchlistPage() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 py-20 text-center">
-          <List className="h-12 w-12 text-muted-foreground/50" />
-          <p className="text-muted-foreground">Your watchlist is empty.</p>
-          <p className="text-sm text-muted-foreground">Search for movies and shows to add them.</p>
-          <div className="mt-4 w-full max-w-md">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/8 border border-primary/15">
+            <List className="h-8 w-8 text-primary/40" />
+          </div>
+          <div>
+            <p className="font-semibold text-muted-foreground">Your watchlist is empty</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">Search for movies and shows to add them</p>
+          </div>
+          <div className="mt-2 w-full max-w-md">
             <SearchBar />
           </div>
         </div>

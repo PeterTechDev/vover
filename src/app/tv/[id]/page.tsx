@@ -49,7 +49,7 @@ export default async function TVDetailPage({
   const backdrop = backdropUrl(show.backdrop_path);
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {backdrop && (
         <div className="relative h-[40vh] w-full md:h-[50vh]">
           <Image
@@ -59,7 +59,7 @@ export default async function TVDetailPage({
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
         </div>
       )}
 

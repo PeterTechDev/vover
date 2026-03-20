@@ -50,10 +50,10 @@ export default function RecommendationsPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="h-8 w-48 bg-secondary/50 rounded animate-pulse mb-8" />
+        <div className="h-8 w-48 rounded animate-shimmer mb-8" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-44 rounded-xl bg-secondary/50 animate-pulse" />
+            <div key={i} className="h-44 rounded-xl animate-shimmer" />
           ))}
         </div>
       </div>

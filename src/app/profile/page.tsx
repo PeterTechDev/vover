@@ -136,15 +136,21 @@ export default function ProfilePage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-8">
         <div className="flex flex-col items-center gap-4 pb-8">
-          <div className="h-20 w-20 rounded-full bg-secondary/50 animate-pulse" />
-          <div className="h-8 w-32 bg-secondary/50 rounded animate-pulse" />
+          <div className="h-20 w-20 rounded-full animate-shimmer" />
+          <div className="h-8 w-32 rounded animate-shimmer" />
+          <div className="h-4 w-24 rounded animate-shimmer" />
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 pb-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-24 rounded-lg animate-shimmer" />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="animate-fade-in mx-auto max-w-3xl px-4 py-8">
       <section className="flex flex-col items-center gap-4 pb-8 text-center">
         <Avatar className="h-20 w-20">
           <AvatarFallback className="bg-primary/10 text-primary text-2xl">
@@ -165,20 +171,20 @@ export default function ProfilePage() {
         </Button>
       </section>
 
-      <div className="grid grid-cols-3 gap-2 sm:gap-4 pb-8">
-        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4">
+      <div className="animate-stagger grid grid-cols-3 gap-2 sm:gap-4 pb-8">
+        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-black/20">
           <List className="h-5 w-5 text-primary" />
-          <span className="text-xl sm:text-2xl font-bold">{watchlistCount}</span>
+          <span className="text-xl sm:text-2xl font-bold tabular-nums">{watchlistCount}</span>
           <span className="text-[11px] sm:text-xs text-muted-foreground">Watchlist</span>
         </div>
-        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4">
+        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-black/20">
           <Eye className="h-5 w-5 text-primary" />
-          <span className="text-xl sm:text-2xl font-bold">{watchedCount}</span>
+          <span className="text-xl sm:text-2xl font-bold tabular-nums">{watchedCount}</span>
           <span className="text-[11px] sm:text-xs text-muted-foreground">Watched</span>
         </div>
-        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4">
+        <div className="flex flex-col items-center gap-1 sm:gap-2 rounded-lg border border-border/50 bg-card p-3 sm:p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-black/20">
           <Star className="h-5 w-5 text-primary" />
-          <span className="text-xl sm:text-2xl font-bold">{avgRating.toFixed(1)}</span>
+          <span className="text-xl sm:text-2xl font-bold tabular-nums">{avgRating.toFixed(1)}</span>
           <span className="text-[11px] sm:text-xs text-muted-foreground">Avg Rating</span>
         </div>
       </div>
@@ -244,9 +250,16 @@ export default function ProfilePage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 py-8 text-center">
-            <Users className="h-8 w-8 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">No friends yet. Add someone!</p>
+          <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/8 border border-primary/15">
+              <Users className="h-7 w-7 text-primary/40" />
+            </div>
+            <div>
+              <p className="font-medium text-sm">No friends yet</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Search by display name to add someone
+              </p>
+            </div>
           </div>
         )}
       </section>

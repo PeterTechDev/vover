@@ -73,7 +73,7 @@ function HorizontalSection({
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-[2/3] w-[140px] flex-shrink-0 rounded-lg bg-secondary/50 animate-pulse"
+              className="aspect-[2/3] w-[140px] flex-shrink-0 rounded-lg animate-shimmer"
             />
           ))}
         </div>
@@ -118,7 +118,7 @@ function GridSection({
       {loading ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="aspect-[2/3] rounded-lg bg-secondary/50 animate-pulse" />
+            <div key={i} className="aspect-[2/3] rounded-lg animate-shimmer" />
           ))}
         </div>
       ) : (
@@ -213,7 +213,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       {/* ── Greeting + Search ── */}
-      <section className="mb-10">
+      <section className="animate-slide-up mb-10">
         <div className="mb-6">
           <h1 className="mb-1 text-2xl font-bold md:text-3xl">{greeting}</h1>
           <p className="text-muted-foreground">
@@ -232,11 +232,13 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         href="/watchlist"
         loading={loadingPersonal}
         empty={
-          <div className="flex items-center gap-4 rounded-lg border border-dashed border-border/50 p-6">
-            <List className="h-8 w-8 text-muted-foreground/40" />
+          <div className="flex items-center gap-4 rounded-xl border border-dashed border-border/50 bg-card/30 p-6 transition-colors hover:border-primary/30">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary/50">
+              <List className="h-6 w-6" />
+            </div>
             <div>
               <p className="font-medium text-sm">Your watchlist is empty</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Browse trending titles below and start saving
               </p>
             </div>
@@ -284,12 +286,14 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         href="/feed"
         loading={loadingPersonal}
         empty={
-          <div className="flex items-center gap-4 rounded-lg border border-dashed border-border/50 p-6">
-            <Users className="h-8 w-8 text-muted-foreground/40" />
+          <div className="flex items-center gap-4 rounded-xl border border-dashed border-border/50 bg-card/30 p-6 transition-colors hover:border-primary/30">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary/50">
+              <Users className="h-6 w-6" />
+            </div>
             <div>
               <p className="font-medium text-sm">No friend activity yet</p>
-              <p className="text-xs text-muted-foreground">
-                <Link href="/profile" className="text-primary hover:underline">
+              <p className="text-xs text-muted-foreground mt-0.5">
+                <Link href="/profile" className="text-primary hover:underline underline-offset-2">
                   Add friends
                 </Link>{" "}
                 to see what they&apos;re watching

@@ -55,7 +55,7 @@ export function Navbar() {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="text-xl font-bold tracking-tight">
+        <Link href="/" className="group text-xl font-bold tracking-tight transition-opacity hover:opacity-80">
           <span className="text-primary">V</span>over
         </Link>
 

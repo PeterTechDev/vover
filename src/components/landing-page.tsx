@@ -12,6 +12,7 @@ import {
   MessageCircle,
   TrendingUp,
   Heart,
+  Play,
 } from "lucide-react";
 
 function getTitle(item: TMDBMediaItem) {
@@ -72,6 +73,27 @@ const testimonials = [
   },
 ];
 
+const steps = [
+  {
+    step: "01",
+    icon: Film,
+    title: "Search & Save",
+    desc: "Search millions of movies and TV shows. Add them to your watchlist instantly.",
+  },
+  {
+    step: "02",
+    icon: Users,
+    title: "Connect Friends",
+    desc: "Add your friends. See what they're watching and what they'd recommend.",
+  },
+  {
+    step: "03",
+    icon: Sparkles,
+    title: "Get Recommendations",
+    desc: "Send and receive picks. Agree on what to watch next in seconds.",
+  },
+];
+
 export async function LandingPage() {
   let trending: TMDBMediaItem[] = [];
   try {
@@ -89,30 +111,43 @@ export async function LandingPage() {
       <section className="relative overflow-hidden px-4 pb-20 pt-16 text-center md:pb-32 md:pt-28">
         {/* Background glow */}
         <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-0 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-primary/8 blur-[120px]" />
+          <div className="absolute left-1/2 top-0 h-[700px] w-[900px] -translate-x-1/2 rounded-full bg-primary/10 blur-[140px]" />
+          <div className="absolute left-1/4 top-1/3 h-[300px] w-[400px] -translate-x-1/2 rounded-full bg-primary/5 blur-[100px]" />
         </div>
 
         {/* Badge */}
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm text-primary">
-          <Star className="h-3.5 w-3.5 fill-primary" />
+        <div className="animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-4 py-1.5 text-sm text-primary">
+          <Play className="h-3 w-3 fill-primary" />
           Social movie recommendations
         </div>
 
-        <h1 className="mx-auto mb-6 max-w-3xl text-5xl font-extrabold tracking-tight md:text-7xl">
+        <h1
+          className="animate-slide-up mx-auto mb-6 max-w-3xl text-5xl font-extrabold tracking-tight md:text-7xl"
+          style={{ animationDelay: "80ms" }}
+        >
           Stop scrolling.
           <br />
           <span className="text-primary">Start watching.</span>
         </h1>
 
-        <p className="mx-auto mb-10 max-w-xl text-lg text-muted-foreground md:text-xl">
+        <p
+          className="animate-slide-up mx-auto mb-10 max-w-xl text-lg text-muted-foreground md:text-xl"
+          style={{ animationDelay: "160ms" }}
+        >
           Vover connects you and your friends around movies and TV. Share what
           you love, discover what they&apos;re watching, and always know what to
           put on next.
         </p>
 
-        <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <div
+          className="animate-slide-up flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
+          style={{ animationDelay: "240ms" }}
+        >
           <Link href="/auth">
-            <Button size="lg" className="gap-2 px-8 text-base font-semibold">
+            <Button
+              size="lg"
+              className="gap-2 px-8 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+            >
               Get Started Free
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -121,7 +156,7 @@ export async function LandingPage() {
             <Button
               size="lg"
               variant="outline"
-              className="px-8 text-base border-border/50 hover:border-primary/50"
+              className="px-8 text-base border-border/50 hover:border-primary/50 hover:bg-primary/5"
             >
               Sign In
             </Button>
@@ -129,20 +164,23 @@ export async function LandingPage() {
         </div>
 
         {/* Social proof numbers */}
-        <div className="mt-12 flex justify-center gap-8 text-center">
+        <div
+          className="animate-fade-in mt-14 flex justify-center gap-6 text-center sm:gap-10"
+          style={{ animationDelay: "360ms" }}
+        >
           <div>
-            <div className="text-2xl font-bold text-foreground">10k+</div>
-            <div className="text-xs text-muted-foreground">Movies tracked</div>
+            <div className="text-2xl font-bold tabular-nums">10k+</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">Movies tracked</div>
           </div>
           <div className="w-px bg-border/50" />
           <div>
-            <div className="text-2xl font-bold text-foreground">Friends</div>
-            <div className="text-xs text-muted-foreground">Not algorithms</div>
+            <div className="text-2xl font-bold">Friends</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">Not algorithms</div>
           </div>
           <div className="w-px bg-border/50" />
           <div>
-            <div className="text-2xl font-bold text-foreground">Free</div>
-            <div className="text-xs text-muted-foreground">Always</div>
+            <div className="text-2xl font-bold">Free</div>
+            <div className="mt-0.5 text-xs text-muted-foreground">Always</div>
           </div>
         </div>
       </section>
@@ -158,7 +196,7 @@ export async function LandingPage() {
                 Sign in to save to your watchlist
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+            <div className="animate-stagger grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
               {trending.slice(0, 8).map((item) => (
                 <MediaCard
                   key={`${item.media_type}-${item.id}`}
@@ -187,15 +225,15 @@ export async function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+          <div className="animate-stagger grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
                 <div
                   key={feature.title}
-                  className="group rounded-xl border border-border/50 bg-card p-6 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+                  className="group rounded-xl border border-border/50 bg-card p-6 transition-all duration-300 hover:border-primary/40 hover:bg-card/80 hover:shadow-xl hover:shadow-primary/8 hover:-translate-y-1"
                 >
-                  <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2.5 text-primary">
+                  <div className="mb-4 inline-flex rounded-lg bg-primary/10 p-2.5 text-primary transition-colors group-hover:bg-primary/20">
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="mb-2 font-semibold">{feature.title}</h3>
@@ -212,44 +250,27 @@ export async function LandingPage() {
       {/* ── How It Works ─────────────────────────────────────────────── */}
       <section className="px-4 pb-20">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-2xl border border-border/50 bg-card p-8 md:p-12">
+          <div className="rounded-2xl border border-border/50 bg-card/50 p-8 md:p-12">
             <div className="mb-10 text-center">
-              <h2 className="mb-4 text-3xl font-bold">How Vover works</h2>
-              <p className="text-muted-foreground">
-                Three steps to better movie nights
-              </p>
+              <h2 className="mb-3 text-3xl font-bold">How Vover works</h2>
+              <p className="text-muted-foreground">Three steps to better movie nights</p>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-3">
-              {[
-                {
-                  step: "01",
-                  icon: Film,
-                  title: "Search & Save",
-                  desc: "Search millions of movies and TV shows. Add them to your watchlist instantly.",
-                },
-                {
-                  step: "02",
-                  icon: Users,
-                  title: "Connect Friends",
-                  desc: "Add your friends. See what they're watching and what they'd recommend.",
-                },
-                {
-                  step: "03",
-                  icon: Sparkles,
-                  title: "Get Recommendations",
-                  desc: "Send and receive picks. Agree on what to watch next in seconds.",
-                },
-              ].map((step) => {
+            <div className="animate-stagger grid gap-8 md:grid-cols-3">
+              {steps.map((step) => {
                 const Icon = step.icon;
                 return (
-                  <div key={step.step} className="flex flex-col items-center text-center gap-3">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-lg">
-                      {step.step}
+                  <div key={step.step} className="group flex flex-col items-center text-center gap-4">
+                    <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary/15 border border-primary/20 text-primary font-bold text-lg transition-all duration-300 group-hover:bg-primary/25 group-hover:border-primary/40">
+                      <Icon className="h-6 w-6" />
+                      <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                        {step.step.replace("0", "")}
+                      </span>
                     </div>
-                    <Icon className="h-6 w-6 text-primary" />
-                    <h3 className="font-semibold">{step.title}</h3>
-                    <p className="text-sm text-muted-foreground">{step.desc}</p>
+                    <div>
+                      <h3 className="mb-1.5 font-semibold">{step.title}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+                    </div>
                   </div>
                 );
               })}
@@ -262,22 +283,18 @@ export async function LandingPage() {
       <section className="px-4 pb-20">
         <div className="mx-auto max-w-4xl">
           <div className="mb-10 text-center">
-            <h2 className="mb-2 text-3xl font-bold">
-              Join your friends on Vover
-            </h2>
-            <p className="text-muted-foreground">
-              Real people, real recommendations
-            </p>
+            <h2 className="mb-2 text-3xl font-bold">Join your friends on Vover</h2>
+            <p className="text-muted-foreground">Real people, real recommendations</p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="animate-stagger grid gap-4 md:grid-cols-3">
             {testimonials.map((t) => (
               <div
                 key={t.name}
-                className="rounded-xl border border-border/50 bg-card p-6"
+                className="rounded-xl border border-border/50 bg-card p-6 transition-all duration-300 hover:border-border hover:shadow-lg"
               >
                 <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary font-semibold text-sm border border-primary/20">
                     {t.initial}
                   </div>
                   <span className="font-medium">{t.name}</span>
@@ -287,10 +304,7 @@ export async function LandingPage() {
                 </p>
                 <div className="mt-3 flex gap-0.5">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className="h-3.5 w-3.5 fill-primary text-primary"
-                    />
+                    <Star key={i} className="h-3.5 w-3.5 fill-primary text-primary" />
                   ))}
                 </div>
               </div>
@@ -302,17 +316,21 @@ export async function LandingPage() {
       {/* ── CTA ──────────────────────────────────────────────────────── */}
       <section className="px-4 pb-24">
         <div className="mx-auto max-w-2xl text-center">
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-10">
+          <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-primary/8 p-10">
+            {/* subtle bg glow */}
+            <div className="pointer-events-none absolute inset-0 -z-10">
+              <div className="absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-[80px]" />
+            </div>
             <Heart className="mx-auto mb-4 h-10 w-10 text-primary" />
-            <h2 className="mb-3 text-3xl font-bold">
-              Ready to watch better?
-            </h2>
+            <h2 className="mb-3 text-3xl font-bold">Ready to watch better?</h2>
             <p className="mb-8 text-muted-foreground">
-              Join Vover for free. Sign in with a magic link — no password
-              required.
+              Join Vover for free. Sign in with a magic link — no password required.
             </p>
             <Link href="/auth">
-              <Button size="lg" className="gap-2 px-10 text-base font-semibold">
+              <Button
+                size="lg"
+                className="gap-2 px-10 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+              >
                 Join Vover Free
                 <ArrowRight className="h-4 w-4" />
               </Button>

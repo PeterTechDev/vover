@@ -39,10 +39,10 @@ export default function WatchedPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <div className="h-8 w-48 bg-secondary/50 rounded animate-pulse mb-8" />
+        <div className="h-8 w-48 rounded animate-shimmer mb-8" />
         <div className="flex flex-col gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-32 rounded-lg bg-secondary/50 animate-pulse" />
+            <div key={i} className="h-32 rounded-lg animate-shimmer" />
           ))}
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function WatchedPage() {
           {items.map((item) => (
             <div
               key={item.id}
-              className="group flex gap-4 rounded-lg border border-border/50 bg-card p-4 transition-colors hover:border-primary/30"
+              className="group flex gap-4 rounded-lg border border-border/50 bg-card p-4 transition-all duration-200 hover:border-primary/30 hover:shadow-md hover:shadow-black/20"
             >
               <Link href={`/${item.media_type}/${item.tmdb_id}`} className="flex-shrink-0">
                 <Image
@@ -110,9 +110,14 @@ export default function WatchedPage() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 py-20 text-center">
-          <Eye className="h-12 w-12 text-muted-foreground/50" />
-          <p className="text-muted-foreground">You haven&apos;t watched anything yet.</p>
-          <div className="mt-4 w-full max-w-md">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/8 border border-primary/15">
+            <Eye className="h-8 w-8 text-primary/40" />
+          </div>
+          <div>
+            <p className="font-semibold text-muted-foreground">Nothing watched yet</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">Mark movies and shows as watched to track your history</p>
+          </div>
+          <div className="mt-2 w-full max-w-md">
             <SearchBar />
           </div>
         </div>

@@ -60,7 +60,7 @@ function ActivityCard({ item }: { item: ActivityItem }) {
   const recipientName = item.recipient?.name || "a friend";
 
   return (
-    <div className="flex gap-4 rounded-xl border border-border/50 bg-card p-4 transition-colors hover:border-border">
+    <div className="flex gap-4 rounded-xl border border-border/50 bg-card p-4 transition-all duration-200 hover:border-border hover:shadow-md hover:shadow-black/20 hover:-translate-y-px">
       {/* Avatar */}
       <Avatar className="h-9 w-9 shrink-0 mt-0.5">
         <AvatarFallback
@@ -182,10 +182,10 @@ export default function FeedPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
-        <div className="h-8 w-40 bg-secondary/50 rounded animate-pulse mb-8" />
+        <div className="h-8 w-40 rounded animate-shimmer mb-8" />
         <div className="flex flex-col gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-28 rounded-xl bg-secondary/50 animate-pulse" />
+            <div key={i} className="h-28 rounded-xl animate-shimmer" />
           ))}
         </div>
       </div>
@@ -195,26 +195,28 @@ export default function FeedPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       {/* Header */}
-      <div className="mb-8 flex items-center gap-2">
+      <div className="animate-slide-up mb-8 flex items-center gap-2">
         <Rss className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Friend Activity</h1>
       </div>
 
       {feed.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 py-20 text-center">
-          <Users className="h-12 w-12 text-muted-foreground/30" />
+        <div className="animate-fade-in flex flex-col items-center gap-5 py-20 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/8 border border-primary/15">
+            <Users className="h-9 w-9 text-primary/40" />
+          </div>
           <div>
-            <p className="text-lg font-medium text-muted-foreground">No activity yet</p>
-            <p className="text-sm text-muted-foreground/60 mt-1">
-              Add friends to see what they&apos;re watching
+            <p className="text-lg font-semibold">No activity yet</p>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-xs">
+              Add friends to see what they&apos;re watching and get personalized picks
             </p>
           </div>
-          <Button variant="secondary" size="sm" asChild>
+          <Button size="sm" asChild>
             <Link href="/profile">Find friends</Link>
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="animate-stagger flex flex-col gap-3">
           {feed.map((item) => (
             <ActivityCard key={item.id} item={item} />
           ))}
