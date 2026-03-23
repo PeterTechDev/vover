@@ -1,5 +1,6 @@
-// Vover Service Worker
+// Vover Service Worker v1.0
 // Provides offline fallback and caches static assets
+// Cache strategy: network-first for navigation, cache-first for static assets
 
 const CACHE_NAME = "vover-v1";
 const OFFLINE_URL = "/offline";
