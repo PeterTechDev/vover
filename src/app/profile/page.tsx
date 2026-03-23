@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Users, List, Eye, Star, UserPlus, Mail, LogOut } from "lucide-react";
+import { Users, List, Eye, Star, UserPlus, Mail, LogOut, BarChart2 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 interface Friend {
@@ -187,6 +188,16 @@ export default function ProfilePage() {
           <span className="text-xl sm:text-2xl font-bold tabular-nums">{avgRating.toFixed(1)}</span>
           <span className="text-[11px] sm:text-xs text-muted-foreground">Avg Rating</span>
         </div>
+      </div>
+
+      {/* Stats link */}
+      <div className="mb-6 -mt-2">
+        <Link href="/stats">
+          <Button variant="outline" size="sm" className="gap-2 text-muted-foreground hover:text-primary hover:border-primary/50">
+            <BarChart2 className="h-4 w-4" />
+            View Full Stats
+          </Button>
+        </Link>
       </div>
 
       <Separator className="mb-8" />
