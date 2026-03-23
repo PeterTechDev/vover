@@ -23,6 +23,8 @@ const navLinks = [
 
 const authLinks = [
   { href: "/", label: "Discover", icon: Film },
+  { href: "/feed", label: "Feed", icon: Rss },
+  { href: "/stats", label: "Stats", icon: BarChart2 },
 ];
 
 export function Navbar() {
