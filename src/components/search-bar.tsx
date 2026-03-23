@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback, type FormEvent, type KeyboardEvent } from "react";
@@ -68,6 +68,14 @@ export function SearchBar({ defaultValue = "", large = false, autoFocus = false 
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  function handleClear() {
+    setQuery("");
+    setResults([]);
+    setIsOpen(false);
+    setFocusIndex(-1);
+    inputRef.current?.focus();
+  }
+
   const navigateToResult = useCallback(
     (result: AutocompleteResult) => {
       setIsOpen(false);
@@ -130,17 +138,26 @@ export function SearchBar({ defaultValue = "", large = false, autoFocus = false 
           onKeyDown={handleKeyDown}
           autoFocus={autoFocus}
           autoComplete="off"
-          className={`bg-secondary/50 border-border/50 ${large ? "h-14 pl-11 pr-4 text-lg" : "h-10 pl-9 pr-4"}`}
+          className={`bg-secondary/50 border-border/50 transition-all focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:border-primary/50 ${large ? "h-14 pl-11 pr-10 text-lg" : "h-10 pl-9 pr-9"}`}
         />
-        {isLoading && (
+        {isLoading ? (
           <Loader2
             className={`absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground ${large ? "h-5 w-5" : "h-4 w-4"}`}
           />
-        )}
+        ) : query.length > 0 ? (
+          <button
+            type="button"
+            onClick={handleClear}
+            aria-label="Clear search"
+            className={`absolute right-3 top-1/2 -translate-y-1/2 rounded-full text-muted-foreground transition-all hover:text-foreground hover:scale-110 ${large ? "h-5 w-5" : "h-4 w-4"}`}
+          >
+            <X className="h-full w-full" />
+          </button>
+        ) : null}
       </form>
 
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 overflow-hidden rounded-lg border border-border bg-popover shadow-lg">
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 overflow-hidden rounded-lg border border-border bg-popover shadow-xl shadow-black/30 animate-fade-in">
           {results.length === 0 && !isLoading ? (
             <div className="px-4 py-3 text-sm text-muted-foreground">
               No results for &ldquo;{query.trim()}&rdquo;
