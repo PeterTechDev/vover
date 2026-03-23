@@ -317,3 +317,16 @@ create policy "Item adders and list creators can remove items" on public.shared_
   );
 
 create index if not exists shared_list_items_list_id_idx on public.shared_list_items(list_id);
+
+-- ─── Migration: Onboarding + Invite Codes (2025-03-23) ───────────────────────
+-- Run migration file: supabase/migrations/20250323_onboarding_invites.sql
+
+-- alter table public.profiles add column if not exists onboarding_completed boolean default false not null;
+
+-- create table if not exists public.invite_codes (
+--   id uuid default gen_random_uuid() primary key,
+--   user_id uuid references public.profiles(id) on delete cascade not null unique,
+--   code text not null unique,
+--   uses integer default 0 not null,
+--   created_at timestamptz default now() not null
+-- );

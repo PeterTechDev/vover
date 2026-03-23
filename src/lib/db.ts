@@ -387,3 +387,112 @@ export async function getEnhancedFriendActivity(userId: string) {
 
   return { data: activities, error: null };
 }
+
+// ─── Onboarding ───────────────────────────────────────────────────────────────
+
+export async function completeOnboarding(userId: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .update({ onboarding_completed: true })
+    .eq("id", userId)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function isOnboardingCompleted(userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("profiles")
+    .select("onboarding_completed")
+    .eq("id", userId)
+    .single();
+  return data?.onboarding_completed === true;
+}
+
+// ─── Invite Codes ─────────────────────────────────────────────────────────────
+
+function generateCode(): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+export async function getOrCreateInviteCode(userId: string): Promise<{ code: string | null; error: Error | null }> {
+  // Try to get existing code
+  const { data: existing } = await supabase
+    .from("invite_codes")
+    .select("code")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existing?.code) return { code: existing.code, error: null };
+
+  // Create new code (retry on collision)
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateCode();
+    const { data, error } = await supabase
+      .from("invite_codes")
+      .insert({ user_id: userId, code })
+      .select("code")
+      .single();
+    if (!error && data) return { code: data.code, error: null };
+  }
+
+  return { code: null, error: new Error("Failed to generate invite code") };
+}
+
+export async function getInviteByCode(code: string) {
+  const { data, error } = await supabase
+    .from("invite_codes")
+    .select("*, owner:profiles!invite_codes_user_id_fkey(id, name, avatar_url)")
+    .eq("code", code)
+    .maybeSingle();
+  return { data, error };
+}
+
+export async function incrementInviteUses(code: string) {
+  // Increment uses using RPC or raw update
+  const { data: current } = await supabase
+    .from("invite_codes")
+    .select("uses")
+    .eq("code", code)
+    .single();
+  
+  if (current) {
+    await supabase
+      .from("invite_codes")
+      .update({ uses: current.uses + 1 })
+      .eq("code", code);
+  }
+}
+
+export async function acceptInviteAndFriend(inviterUserId: string, newUserId: string) {
+  // Increment uses
+  const { data: inviteCode } = await supabase
+    .from("invite_codes")
+    .select("code")
+    .eq("user_id", inviterUserId)
+    .single();
+  
+  if (inviteCode) await incrementInviteUses(inviteCode.code);
+
+  // Create friendship (inviter → new user)
+  const { data, error } = await supabase
+    .from("friendships")
+    .insert({ requester_id: inviterUserId, addressee_id: newUserId, status: "accepted" })
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function getInviteStats(userId: string) {
+  const { data, error } = await supabase
+    .from("invite_codes")
+    .select("code, uses")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return { data, error };
+}

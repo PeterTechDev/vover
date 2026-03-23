@@ -7,9 +7,11 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get("code");
   const origin = requestUrl.origin;
 
-  if (code) {
-    const cookieStore = cookies();
+  // Check for invite code cookie (set when visiting /invite/[code])
+  const cookieStore = cookies();
+  const pendingInviteCode = cookieStore.get("pending_invite_code")?.value;
 
+  if (code) {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -24,15 +26,69 @@ export async function GET(request: NextRequest) {
                 cookieStore.set(name, value, options)
               );
             } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing sessions.
+              // Server Component — can be ignored
             }
           },
         },
       }
     );
 
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data: { session } } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (session?.user) {
+      const userId = session.user.id;
+
+      // Handle pending invite code — create friendship
+      if (pendingInviteCode) {
+        try {
+          // Look up invite code to get inviter
+          const { data: invite } = await supabase
+            .from("invite_codes")
+            .select("user_id, uses")
+            .eq("code", pendingInviteCode)
+            .maybeSingle();
+
+          if (invite && invite.user_id !== userId) {
+            // Create accepted friendship
+            await supabase.from("friendships").insert({
+              requester_id: invite.user_id,
+              addressee_id: userId,
+              status: "accepted",
+            });
+            // Increment invite uses
+            await supabase
+              .from("invite_codes")
+              .update({ uses: invite.uses + 1 })
+              .eq("code", pendingInviteCode);
+          }
+        } catch (err) {
+          console.error("Invite acceptance error:", err);
+        }
+
+        // Clear the cookie
+        try {
+          cookieStore.set("pending_invite_code", "", { maxAge: 0 });
+        } catch {
+          // ignore
+        }
+      }
+
+      // Check if onboarding is completed
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", userId)
+          .single();
+
+        if (!profile?.onboarding_completed) {
+          return NextResponse.redirect(`${origin}/onboarding`);
+        }
+      } catch {
+        // If we can't check (e.g., new user profile not yet created), redirect to onboarding
+        return NextResponse.redirect(`${origin}/onboarding`);
+      }
+    }
   }
 
   return NextResponse.redirect(`${origin}/`);

@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
+import { ServiceWorkerRegister } from "@/components/sw-register";
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -36,6 +38,11 @@ export const metadata: Metadata = {
     follow: true,
   },
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Vover",
+  },
 };
 
 export const viewport: Viewport = {
@@ -51,11 +58,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Vover" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <Navbar />
         <main className="min-h-screen pt-16">{children}</main>
         <Footer />
         <Toaster theme="dark" position="bottom-right" richColors />
+        <ServiceWorkerRegister />
+        <PWAInstallPrompt />
       </body>
     </html>
   );

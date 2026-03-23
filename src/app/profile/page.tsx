@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Users, List, Eye, Star, UserPlus, Mail, LogOut, BarChart2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { InviteFriends } from "@/components/invite-friends";
 
 interface Friend {
   id: string;
@@ -170,6 +171,13 @@ export default function ProfilePage() {
           <LogOut className="h-4 w-4" />
           Sign Out
         </Button>
+
+        {/* Invite Friends — prominent CTA */}
+        {userId && (
+          <div className="w-full max-w-xs">
+            <InviteFriends />
+          </div>
+        )}
       </section>
 
       <div className="animate-stagger grid grid-cols-3 gap-2 sm:gap-4 pb-8">
