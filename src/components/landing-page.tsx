@@ -148,12 +148,12 @@ export async function LandingPage() {
         {/* Gradient overlay */}
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-background/50 via-background/80 to-background" />
         <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute left-1/2 top-1/4 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-primary/8 blur-[120px]" />
+          <div className="absolute left-1/2 top-1/4 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-primary/10 blur-[120px]" />
         </div>
 
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
-          <div className="animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/8 px-4 py-1.5 text-sm font-medium text-primary">
+          <div className="animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
             <Play className="h-3 w-3 fill-primary" />
             Social movie &amp; TV recommendations
           </div>
@@ -228,7 +228,7 @@ export async function LandingPage() {
                 Sign in to save to your watchlist →
               </div>
             </div>
-            <div className="animate-stagger grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-8">
+            <div className="animate-stagger grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
               {trending.slice(0, 8).map((item) => (
                 <MediaCard
                   key={`${item.media_type}-${item.id}`}
@@ -257,7 +257,7 @@ export async function LandingPage() {
             </p>
           </div>
 
-          <div className="animate-stagger grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3">
+          <div className="animate-stagger grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
@@ -297,7 +297,7 @@ export async function LandingPage() {
                 const Icon = step.icon;
                 return (
                   <div key={step.step} className="group flex flex-col items-center text-center gap-4">
-                    <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/12 border border-primary/20 text-primary transition-all duration-300 group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:scale-105">
+                    <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 border border-primary/20 text-primary transition-all duration-300 group-hover:bg-primary/20 group-hover:border-primary/40 group-hover:scale-105">
                       <Icon className="h-7 w-7" />
                       <span className="absolute -top-2.5 -right-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground shadow-lg">
                         {step.step}
@@ -354,7 +354,7 @@ export async function LandingPage() {
         <div className="mx-auto max-w-2xl text-center">
           <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-b from-primary/10 to-primary/5 p-12">
             <div className="pointer-events-none absolute inset-0 -z-10">
-              <div className="absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/12 blur-[80px]" />
+              <div className="absolute left-1/2 top-1/2 h-[300px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-[80px]" />
             </div>
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 border border-primary/25">
               <Heart className="h-7 w-7 text-primary" />

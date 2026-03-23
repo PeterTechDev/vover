@@ -69,9 +69,12 @@ export default async function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Vover" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-primary focus:px-4 focus:py-2 focus:text-white">
+          Skip to content
+        </a>
         <SessionProvider>
           <Navbar />
-          <main className="min-h-screen pt-16">{children}</main>
+          <main id="main-content" className="min-h-screen pt-16">{children}</main>
           <Footer isLoggedIn={!!session} />
           <Toaster theme="dark" position="bottom-right" richColors />
           <ServiceWorkerRegister />
