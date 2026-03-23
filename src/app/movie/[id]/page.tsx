@@ -6,6 +6,7 @@ import {
   getMovieVideos,
   getMovieWatchProviders,
   getSimilarMovies,
+  getMovieRecommendations,
   posterUrl,
   backdropUrl,
   profileUrl,
@@ -57,17 +58,19 @@ export default async function MovieDetailPage({
   }
 
   // Fetch supporting data in parallel (gracefully degrade)
-  const [creditsResult, videosResult, providersResult, similarResult] = await Promise.allSettled([
+  const [creditsResult, videosResult, providersResult, similarResult, recommendationsResult] = await Promise.allSettled([
     getMovieCredits(id),
     getMovieVideos(id),
     getMovieWatchProviders(id),
     getSimilarMovies(id),
+    getMovieRecommendations(id),
   ]);
 
   const credits = creditsResult.status === "fulfilled" ? creditsResult.value : null;
   const videos = videosResult.status === "fulfilled" ? videosResult.value : null;
   const providers = providersResult.status === "fulfilled" ? providersResult.value : null;
   const similar = similarResult.status === "fulfilled" ? similarResult.value : null;
+  const recommendations = recommendationsResult.status === "fulfilled" ? recommendationsResult.value : null;
 
   const backdrop = backdropUrl(movie.backdrop_path);
   const topCast = credits?.cast?.slice(0, 12) ?? [];
@@ -90,7 +93,17 @@ export default async function MovieDetailPage({
   const rent = providerData?.rent ?? [];
   // buy = providerData?.buy — available but not displayed in this layout
 
-  const similarMovies = similar?.results?.filter(m => m.poster_path).slice(0, 8) ?? [];
+  // Combine recommendations (primary) + similar (fallback), deduplicate by id
+  const seen = new Set<number>();
+  const combined = [
+    ...(recommendations?.results ?? []),
+    ...(similar?.results ?? []),
+  ].filter(m => {
+    if (!m.poster_path || seen.has(m.id)) return false;
+    seen.add(m.id);
+    return true;
+  });
+  const similarMovies = combined.slice(0, 8);
 
   const runtime = movie.runtime > 0
     ? `${Math.floor(movie.runtime / 60)}h ${movie.runtime % 60}m`

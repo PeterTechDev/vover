@@ -184,3 +184,11 @@ export async function getSimilarMovies(id: number): Promise<TMDBSearchResult> {
 export async function getSimilarTV(id: number): Promise<TMDBSearchResult> {
   return tmdbFetch<TMDBSearchResult>(`/tv/${id}/similar`);
 }
+
+export async function getMovieRecommendations(id: number): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/movie/${id}/recommendations`);
+}
+
+export async function getTVRecommendations(id: number): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/tv/${id}/recommendations`);
+}

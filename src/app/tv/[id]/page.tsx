@@ -6,6 +6,7 @@ import {
   getTVVideos,
   getTVWatchProviders,
   getSimilarTV,
+  getTVRecommendations,
   posterUrl,
   backdropUrl,
   profileUrl,
@@ -56,17 +57,19 @@ export default async function TVDetailPage({
     notFound();
   }
 
-  const [creditsResult, videosResult, providersResult, similarResult] = await Promise.allSettled([
+  const [creditsResult, videosResult, providersResult, similarResult, recommendationsResult] = await Promise.allSettled([
     getTVCredits(id),
     getTVVideos(id),
     getTVWatchProviders(id),
     getSimilarTV(id),
+    getTVRecommendations(id),
   ]);
 
   const credits = creditsResult.status === "fulfilled" ? creditsResult.value : null;
   const videos = videosResult.status === "fulfilled" ? videosResult.value : null;
   const providers = providersResult.status === "fulfilled" ? providersResult.value : null;
   const similar = similarResult.status === "fulfilled" ? similarResult.value : null;
+  const recommendations = recommendationsResult.status === "fulfilled" ? recommendationsResult.value : null;
 
   const backdrop = backdropUrl(show.backdrop_path);
   const topCast = credits?.cast?.slice(0, 12) ?? [];
@@ -84,7 +87,17 @@ export default async function TVDetailPage({
   const flatrate = providerData?.flatrate ?? [];
   const rent = providerData?.rent ?? [];
 
-  const similarShows = similar?.results?.filter(s => s.poster_path).slice(0, 8) ?? [];
+  // Combine recommendations (primary) + similar (fallback), deduplicate by id
+  const seen = new Set<number>();
+  const combined = [
+    ...(recommendations?.results ?? []),
+    ...(similar?.results ?? []),
+  ].filter(s => {
+    if (!s.poster_path || seen.has(s.id)) return false;
+    seen.add(s.id);
+    return true;
+  });
+  const similarShows = combined.slice(0, 8);
 
   return (
     <div className="animate-fade-in min-h-screen">
