@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { FadeIn } from "@/components/motion";
 import { MediaCard } from "@/components/media-card";
 import { RecommendationsInbox } from "@/components/recommendations-inbox";
 import { List, Trash2 } from "lucide-react";
@@ -91,6 +92,7 @@ export default function WatchlistPage() {
   }
 
   return (
+    <FadeIn>
     <div className="mx-auto max-w-7xl px-4 py-8">
       {/* Recommendations preview — max 3, link to full page */}
       <RecommendationsInbox
@@ -149,5 +151,6 @@ export default function WatchlistPage() {
         </div>
       )}
     </div>
+    </FadeIn>
   );
 }

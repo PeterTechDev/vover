@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { FadeIn } from "@/components/motion";
 import Image from "next/image";
 import Link from "next/link";
 import { posterUrl } from "@/lib/tmdb";
@@ -62,6 +63,7 @@ export default function WatchedPage() {
   }
 
   return (
+    <FadeIn>
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-8 flex items-center gap-2">
         <Eye className="h-6 w-6 text-primary" />
@@ -123,5 +125,6 @@ export default function WatchedPage() {
         </div>
       )}
     </div>
+    </FadeIn>
   );
 }
