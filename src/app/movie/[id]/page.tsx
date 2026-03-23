@@ -112,7 +112,7 @@ export default async function MovieDetailPage({
   return (
     <div className="animate-fade-in min-h-screen">
       {/* ── Backdrop Hero ──────────────────────────────────────────── */}
-      <div className="relative h-[55vh] w-full md:h-[65vh] overflow-hidden">
+      <div className="relative h-[40vh] w-full sm:h-[50vh] md:h-[65vh] overflow-hidden">
         {backdrop ? (
           <Image
             src={backdrop}
@@ -148,7 +148,7 @@ export default async function MovieDetailPage({
 
       {/* ── Main Content ───────────────────────────────────────────── */}
       <div className="mx-auto max-w-7xl px-4">
-        <div className="relative z-10 -mt-48 flex flex-col gap-8 md:flex-row md:-mt-56">
+        <div className="relative z-10 -mt-32 flex flex-col gap-8 sm:-mt-40 md:flex-row md:-mt-56">
           {/* Poster */}
           <div className="flex justify-center md:justify-start flex-shrink-0">
             <div className="relative w-[160px] md:w-[240px] lg:w-[280px]">
@@ -238,8 +238,8 @@ export default async function MovieDetailPage({
             {(flatrate.length > 0 || rent.length > 0) && (
               <div className="mt-2 space-y-3">
                 {flatrate.length > 0 && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-20 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16 shrink-0">
                       Stream
                     </span>
                     <div className="flex flex-wrap gap-2">
@@ -262,8 +262,8 @@ export default async function MovieDetailPage({
                   </div>
                 )}
                 {rent.length > 0 && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-20 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16 shrink-0">
                       Rent/Buy
                     </span>
                     <div className="flex flex-wrap gap-2">

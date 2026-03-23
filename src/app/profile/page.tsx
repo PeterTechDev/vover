@@ -261,16 +261,47 @@ export default function ProfilePage() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <div className="flex flex-col items-center gap-4 py-10 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/8 border border-primary/15">
               <Users className="h-7 w-7 text-primary/40" />
             </div>
             <div>
-              <p className="font-medium text-sm">No friends yet</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Search by display name to add someone
+              <p className="font-semibold text-sm">No friends yet</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                Connect with friends to see their watchlists and get personalized picks.
               </p>
             </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Add Your First Friend
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Add a Friend</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    Search by display name
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Friend&apos;s name"
+                      value={friendEmail}
+                      onChange={(e) => setFriendEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSendInvite()}
+                    />
+                    <Button onClick={handleSendInvite} disabled={sendingInvite}>
+                      {sendingInvite ? "..." : "Send"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </section>
