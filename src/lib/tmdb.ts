@@ -13,6 +13,11 @@ export function backdropUrl(path: string | null, size = "w1280") {
   return `${TMDB_IMAGE_BASE}/${size}${path}`;
 }
 
+export function profileUrl(path: string | null, size = "w185") {
+  if (!path) return null;
+  return `${TMDB_IMAGE_BASE}/${size}${path}`;
+}
+
 async function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
   const url = new URL(`${BASE_URL}${endpoint}`);
   url.searchParams.set("api_key", TMDB_API_KEY || "");
@@ -58,6 +63,9 @@ export interface TMDBMovieDetail {
   genres: { id: number; name: string }[];
   tagline: string;
   status: string;
+  budget?: number;
+  revenue?: number;
+  production_companies?: { id: number; name: string; logo_path: string | null }[];
 }
 
 export interface TMDBTVDetail {
@@ -69,11 +77,64 @@ export interface TMDBTVDetail {
   first_air_date: string;
   number_of_seasons: number;
   number_of_episodes: number;
+  episode_run_time?: number[];
   vote_average: number;
   vote_count: number;
   genres: { id: number; name: string }[];
   tagline: string;
   status: string;
+  networks?: { id: number; name: string; logo_path: string | null }[];
+}
+
+export interface TMDBCastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+  order: number;
+}
+
+export interface TMDBCrewMember {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
+  profile_path: string | null;
+}
+
+export interface TMDBCredits {
+  cast: TMDBCastMember[];
+  crew: TMDBCrewMember[];
+}
+
+export interface TMDBVideo {
+  id: string;
+  key: string;
+  name: string;
+  site: string;
+  type: string;
+  official: boolean;
+  published_at: string;
+}
+
+export interface TMDBVideosResult {
+  results: TMDBVideo[];
+}
+
+export interface TMDBWatchProvider {
+  logo_path: string;
+  provider_id: number;
+  provider_name: string;
+  display_priority: number;
+}
+
+export interface TMDBWatchProvidersResult {
+  results: Record<string, {
+    link?: string;
+    flatrate?: TMDBWatchProvider[];
+    rent?: TMDBWatchProvider[];
+    buy?: TMDBWatchProvider[];
+  }>;
 }
 
 export async function searchMulti(query: string, page = 1): Promise<TMDBSearchResult> {
@@ -90,4 +151,36 @@ export async function getTVShow(id: number): Promise<TMDBTVDetail> {
 
 export async function getTrending(mediaType: "movie" | "tv" | "all" = "all", timeWindow: "day" | "week" = "week"): Promise<TMDBSearchResult> {
   return tmdbFetch<TMDBSearchResult>(`/trending/${mediaType}/${timeWindow}`);
+}
+
+export async function getMovieCredits(id: number): Promise<TMDBCredits> {
+  return tmdbFetch<TMDBCredits>(`/movie/${id}/credits`);
+}
+
+export async function getTVCredits(id: number): Promise<TMDBCredits> {
+  return tmdbFetch<TMDBCredits>(`/tv/${id}/credits`);
+}
+
+export async function getMovieVideos(id: number): Promise<TMDBVideosResult> {
+  return tmdbFetch<TMDBVideosResult>(`/movie/${id}/videos`);
+}
+
+export async function getTVVideos(id: number): Promise<TMDBVideosResult> {
+  return tmdbFetch<TMDBVideosResult>(`/tv/${id}/videos`);
+}
+
+export async function getMovieWatchProviders(id: number): Promise<TMDBWatchProvidersResult> {
+  return tmdbFetch<TMDBWatchProvidersResult>(`/movie/${id}/watch/providers`);
+}
+
+export async function getTVWatchProviders(id: number): Promise<TMDBWatchProvidersResult> {
+  return tmdbFetch<TMDBWatchProvidersResult>(`/tv/${id}/watch/providers`);
+}
+
+export async function getSimilarMovies(id: number): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/movie/${id}/similar`);
+}
+
+export async function getSimilarTV(id: number): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/tv/${id}/similar`);
 }
