@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="500" height="750" viewBox="0 0 500 750" fill="none">
-  <rect width="500" height="750" fill="#16161A"/>
-  <path d="M220 345 L280 345 L280 405 L220 405 Z" stroke="#555" stroke-width="2" fill="none"/>
-  <circle cx="240" cy="365" r="6" fill="#555"/>
-  <path d="M222 400 L248 380 L262 392 L270 386 L278 400" stroke="#555" stroke-width="2" fill="none"/>
-  <text x="250" y="440" text-anchor="middle" fill="#555" font-family="system-ui" font-size="14">No poster available</text>
+  <rect width="500" height="750" fill="#0d1117"/>
+  <rect x="180" y="300" width="140" height="150" rx="8" stroke="#1a2a1a" stroke-width="2" fill="#0f1a0f"/>
+  <circle cx="220" cy="340" r="12" fill="#1a3a2a"/>
+  <path d="M182 445 L220 415 L248 432 L278 418 L318 445" stroke="#1a3a2a" stroke-width="2" fill="none"/>
+  <text x="250" y="490" text-anchor="middle" fill="#2a5a3a" font-family="system-ui" font-size="14" font-weight="500">No poster</text>
 </svg>

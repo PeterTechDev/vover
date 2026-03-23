@@ -54,10 +54,13 @@ export function Navbar() {
   const links = user ? navLinks : authLinks;
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
+    <header className="fixed top-0 z-50 w-full border-b border-border/30 bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="group text-xl font-bold tracking-tight transition-opacity hover:opacity-80">
-          <span className="text-primary">V</span>over
+        <Link href="/" className="group flex items-center gap-2 transition-opacity hover:opacity-85">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground font-extrabold text-sm shadow-lg shadow-primary/30">
+            V
+          </div>
+          <span className="text-lg font-extrabold tracking-tight">over</span>
         </Link>
 
         {/* Desktop nav */}
