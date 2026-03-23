@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithMagicLink } from "@/lib/auth";
+import { signIn } from "next-auth/react";
 import { Mail, Check, Film, Sparkles, Users, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,18 @@ export default function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const { error } = await signInWithMagicLink(email.trim());
-    if (error) {
-      setError(error.message);
-    } else {
-      setSent(true);
+    try {
+      const result = await signIn("resend", {
+        email: email.trim(),
+        redirect: false,
+      });
+      if (result?.error) {
+        setError("Failed to send magic link. Please try again.");
+      } else {
+        setSent(true);
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
     }
     setLoading(false);
   }

@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { useSession } from "next-auth/react";
 import {
   getSharedListById,
   getSharedListItems,
@@ -13,7 +13,7 @@ import {
   deleteSharedList,
   getFriendsByUserId,
   addMemberToList,
-} from "@/lib/db";
+} from "@/lib/db-client";
 import { posterUrl } from "@/lib/tmdb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +83,8 @@ interface SearchResult {
 export default function ListDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: listId } = use(params);
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? null;
   const [list, setList] = useState<SharedList | null>(null);
   const [items, setItems] = useState<ListItem[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -98,41 +99,31 @@ export default function ListDetailPage({ params }: { params: Promise<{ id: strin
   const [invitingId, setInvitingId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.push("/auth");
-        return;
-      }
-      setUserId(user.id);
+    if (status === "loading") return;
+    if (!userId) { router.push("/auth"); return; }
 
-      const [listRes, itemsRes, friendsRes] = await Promise.all([
-        getSharedListById(listId),
-        getSharedListItems(listId),
-        getFriendsByUserId(user.id),
-      ]);
-
+    Promise.all([
+      getSharedListById(listId),
+      getSharedListItems(listId),
+      getFriendsByUserId(userId),
+    ]).then(([listRes, itemsRes, friendsRes]) => {
       if (listRes.error || !listRes.data) {
         toast.error("List not found");
         router.push("/lists");
         return;
       }
-
       setList(listRes.data as SharedList);
       setItems((itemsRes.data as ListItem[]) || []);
-
-      // Extract friend profiles from friendship data
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawFriendships = (friendsRes.data || []) as any[];
       const friendProfiles: Friend[] = rawFriendships.map((f) => {
-        const isRequester = f.requester_id === user.id;
+        const isRequester = f.requester_id === userId;
         const profile = isRequester ? f.addressee : f.requester;
         return { id: profile?.id, name: profile?.name, avatar_url: profile?.avatar_url };
       });
       setFriends(friendProfiles);
-
-      setLoading(false);
-    });
-  }, [listId, router]);
+    }).finally(() => setLoading(false));
+  }, [listId, userId, status, router]);
 
   // Debounced search for adding movies
   useEffect(() => {

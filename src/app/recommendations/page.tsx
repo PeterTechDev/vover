@@ -4,48 +4,37 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { RecommendationsInbox } from "@/components/recommendations-inbox";
 import { Sparkles } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { getRecommendationsForUser, getWatchlist, getWatched } from "@/lib/db";
+import { useSession } from "next-auth/react";
+import { getRecommendationsForUser, getWatchlist, getWatched } from "@/lib/db-client";
 
 export default function RecommendationsPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [watchlistKeys, setWatchlistKeys] = useState<Set<string>>(new Set());
   const [watchedKeys, setWatchedKeys] = useState<Set<string>>(new Set());
-  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? null;
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.replace("/auth");
-        return;
-      }
+    if (status === "loading") return;
+    if (!userId) { router.replace("/auth"); return; }
 
-      setUserId(user.id);
-
-      const [recsRes, watchlistRes, watchedRes] = await Promise.all([
-        getRecommendationsForUser(user.id),
-        getWatchlist(user.id),
-        getWatched(user.id),
-      ]);
-
+    Promise.all([
+      getRecommendationsForUser(userId),
+      getWatchlist(userId),
+      getWatched(userId),
+    ]).then(([recsRes, watchlistRes, watchedRes]) => {
       setRecommendations(recsRes.data || []);
-
-      const wlKeys = new Set(
-        (watchlistRes.data || []).map((i) => `${i.tmdb_id}-${i.media_type}`)
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wlKeys = new Set(((watchlistRes.data || []) as any[]).map((i) => `${i.tmdb_id}-${i.media_type}`));
       setWatchlistKeys(wlKeys);
-
-      const wKeys = new Set(
-        (watchedRes.data || []).map((i) => `${i.tmdb_id}-${i.media_type}`)
-      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wKeys = new Set(((watchedRes.data || []) as any[]).map((i) => `${i.tmdb_id}-${i.media_type}`));
       setWatchedKeys(wKeys);
-
-      setLoading(false);
-    });
-  }, [router]);
+    }).finally(() => setLoading(false));
+  }, [userId, status, router]);
 
   if (loading) {
     return (

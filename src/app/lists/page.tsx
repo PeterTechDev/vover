@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
-import { getSharedLists, createSharedList } from "@/lib/db";
+import { useSession } from "next-auth/react";
+import { getSharedLists, createSharedList } from "@/lib/db-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -25,7 +25,8 @@ interface SharedList {
 
 export default function ListsPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? null;
   const [lists, setLists] = useState<SharedList[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -34,17 +35,12 @@ export default function ListsPage() {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.push("/auth");
-        return;
-      }
-      setUserId(user.id);
-      const { data } = await getSharedLists(user.id);
+    if (status === "loading") return;
+    if (!userId) { router.push("/auth"); return; }
+    getSharedLists(userId).then(({ data }) => {
       setLists((data as SharedList[]) || []);
-      setLoading(false);
-    });
-  }, [router]);
+    }).finally(() => setLoading(false));
+  }, [userId, status, router]);
 
   async function handleCreate() {
     if (!userId || !newListName.trim()) return;

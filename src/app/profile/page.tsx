@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-import { getProfile, getFriends, getWatchlist, getWatched } from "@/lib/db";
+import { useSession, signOut } from "next-auth/react";
+import { getProfile, getFriends, getWatchlist, getWatched, sendFriendRequest } from "@/lib/db-client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,8 @@ interface Friend {
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? null;
   const [userName, setUserName] = useState<string | null>(null);
   const [userCreatedAt, setUserCreatedAt] = useState<string>("");
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -34,104 +35,61 @@ export default function ProfilePage() {
   const [sendingInvite, setSendingInvite] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.push("/auth");
-        return;
-      }
-      setUserId(user.id);
+    if (status === "loading") return;
+    if (!userId) { router.push("/auth"); return; }
 
-      // Load profile
-      const { data: profile } = await getProfile(user.id);
-      setUserName(profile?.name || user.email?.split("@")[0] || "User");
-      setUserCreatedAt(profile?.created_at || user.created_at || "");
+    Promise.all([
+      getProfile(userId),
+      getWatchlist(userId),
+      getWatched(userId),
+      getFriends(userId),
+    ]).then(([profileRes, watchlistRes, watchedRes, friendsRes]) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const profile = profileRes.data as any;
+      setUserName(profile?.name || session?.user?.email?.split("@")[0] || "User");
+      setUserCreatedAt(profile?.created_at || "");
 
-      // Load stats
-      const { data: watchlist } = await getWatchlist(user.id);
-      setWatchlistCount(watchlist?.length || 0);
+      setWatchlistCount((watchlistRes.data || []).length);
 
-      const { data: watched } = await getWatched(user.id);
-      setWatchedCount(watched?.length || 0);
-      const rated = (watched || []).filter((w) => w.rating != null);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const watchedData = (watchedRes.data || []) as any[];
+      setWatchedCount(watchedData.length);
+      const rated = watchedData.filter((w) => w.rating != null);
       const avg = rated.length
-        ? rated.reduce((sum, w) => sum + (w.rating || 0), 0) / rated.length
+        ? rated.reduce((sum: number, w: { rating: number }) => sum + (w.rating || 0), 0) / rated.length
         : 0;
       setAvgRating(avg);
 
-      // Load friends
-      const { data: friendships } = await getFriends(user.id);
-      if (friendships) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const friendList: Friend[] = friendships.map((f: Record<string, any>) => {
-          const friend = f.requester_id === user.id ? f.addressee : f.requester;
-          return {
-            id: friend?.id || "",
-            name: friend?.name || "Unknown",
-            avatar_url: friend?.avatar_url || null,
-          };
-        });
-        setFriends(friendList);
-      }
-
-      setLoading(false);
-    });
-  }, [router]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const friendships = (friendsRes.data || []) as any[];
+      const friendList: Friend[] = friendships.map((f) => {
+        const friend = f.requester_id === userId ? f.addressee : f.requester;
+        return { id: friend?.id || "", name: friend?.name || "Unknown", avatar_url: friend?.avatar_url || null };
+      });
+      setFriends(friendList);
+    }).finally(() => setLoading(false));
+  }, [userId, status, router, session]);
 
   async function handleSendInvite() {
     if (!friendEmail.trim() || !userId) return;
     setSendingInvite(true);
-
-    // Look up user by name (search profiles)
-    const { data: profiles, error: searchError } = await supabase
-      .from("profiles")
-      .select("id, name")
-      .ilike("name", `%${friendEmail.trim()}%`)
-      .limit(1);
-
-    if (searchError || !profiles?.length) {
-      toast.error("User not found. Try searching by their display name.");
-      setSendingInvite(false);
-      return;
-    }
-
-    const targetId = profiles[0].id;
-    if (targetId === userId) {
-      toast.error("You can't add yourself as a friend.");
-      setSendingInvite(false);
-      return;
-    }
-
-    // Check for existing friendship
-    const { data: existing } = await supabase
-      .from("friendships")
-      .select("id")
-      .or(
-        `and(requester_id.eq.${userId},addressee_id.eq.${targetId}),and(requester_id.eq.${targetId},addressee_id.eq.${userId})`
-      )
-      .maybeSingle();
-
-    if (existing) {
-      toast.info("Friend request already exists.");
-      setSendingInvite(false);
-      return;
-    }
-
-    const { error } = await supabase
-      .from("friendships")
-      .insert({ requester_id: userId, addressee_id: targetId });
-
-    if (error) {
+    try {
+      const { error } = await sendFriendRequest(userId, friendEmail.trim());
+      if (error) {
+        toast.error("User not found or request already exists.");
+      } else {
+        toast.success("Friend request sent!");
+        setFriendEmail("");
+      }
+    } catch {
       toast.error("Failed to send friend request.");
-    } else {
-      toast.success("Friend request sent!");
-      setFriendEmail("");
     }
     setSendingInvite(false);
   }
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
-    router.push("/auth");
+    await signOut({ redirect: false });
+    router.push("/");
   }
 
   if (loading) {
@@ -171,8 +129,6 @@ export default function ProfilePage() {
           <LogOut className="h-4 w-4" />
           Sign Out
         </Button>
-
-        {/* Invite Friends — prominent CTA */}
         {userId && (
           <div className="w-full max-w-xs">
             <InviteFriends />
@@ -198,7 +154,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Stats link */}
       <div className="mb-6 -mt-2">
         <Link href="/stats">
           <Button variant="outline" size="sm" className="gap-2 text-muted-foreground hover:text-primary hover:border-primary/50">
@@ -231,19 +186,11 @@ export default function ProfilePage() {
               <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4" />
-                  Search by display name
+                  Enter their email address
                 </div>
                 <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Friend's name"
-                    value={friendEmail}
-                    onChange={(e) => setFriendEmail(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSendInvite()}
-                  />
-                  <Button onClick={handleSendInvite} disabled={sendingInvite}>
-                    {sendingInvite ? "..." : "Send"}
-                  </Button>
+                  <Input type="email" placeholder="friend@email.com" value={friendEmail} onChange={(e) => setFriendEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSendInvite()} />
+                  <Button onClick={handleSendInvite} disabled={sendingInvite}>{sendingInvite ? "..." : "Send"}</Button>
                 </div>
               </div>
             </DialogContent>
@@ -253,10 +200,7 @@ export default function ProfilePage() {
         {friends.length > 0 ? (
           <div className="flex flex-col gap-3">
             {friends.map((friend) => (
-              <div
-                key={friend.id}
-                className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-4"
-              >
+              <div key={friend.id} className="flex items-center justify-between rounded-lg border border-border/50 bg-card p-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
                     <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -275,41 +219,8 @@ export default function ProfilePage() {
             </div>
             <div>
               <p className="font-semibold text-sm">No friends yet</p>
-              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-                Connect with friends to see their watchlists and get personalized picks.
-              </p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">Share your invite link or add friends by email.</p>
             </div>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-2">
-                  <UserPlus className="h-4 w-4" />
-                  Add Your First Friend
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add a Friend</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Mail className="h-4 w-4" />
-                    Search by display name
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Friend&apos;s name"
-                      value={friendEmail}
-                      onChange={(e) => setFriendEmail(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleSendInvite()}
-                    />
-                    <Button onClick={handleSendInvite} disabled={sendingInvite}>
-                      {sendingInvite ? "..." : "Send"}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
         )}
       </section>

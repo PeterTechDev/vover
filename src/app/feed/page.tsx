@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { posterUrl } from "@/lib/tmdb";
-import { supabase } from "@/lib/supabase";
-import { getEnhancedFriendActivity } from "@/lib/db";
+import { useSession } from "next-auth/react";
+import { getEnhancedFriendActivity } from "@/lib/db-client";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Rss, Eye, Send, Users, Star } from "lucide-react";
@@ -156,28 +156,18 @@ function ActivityCard({ item }: { item: ActivityItem }) {
 
 export default function FeedPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? null;
   const [feed, setFeed] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [signedIn, setSignedIn] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        setSignedIn(false);
-        setLoading(false);
-        return;
-      }
-      const { data } = await getEnhancedFriendActivity(user.id);
+    if (status === "loading") return;
+    if (!userId) { router.push("/auth"); return; }
+    getEnhancedFriendActivity(userId).then(({ data }) => {
       setFeed((data as ActivityItem[]) || []);
-      setLoading(false);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!signedIn) {
-      router.push("/auth");
-    }
-  }, [signedIn, router]);
+    }).finally(() => setLoading(false));
+  }, [userId, status, router]);
 
   if (loading) {
     return (

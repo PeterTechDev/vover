@@ -5,10 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { Film, List, Eye, Rss, User, Menu, Sparkles, LogIn, LogOut, ListChecks, BarChart2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { supabase } from "@/lib/supabase";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { useSession, signOut } from "next-auth/react";
 
 const navLinks = [
   { href: "/", label: "Discover", icon: Film },
@@ -31,24 +30,13 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [authLoaded, setAuthLoaded] = useState(false);
+  const { data: session, status } = useSession();
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setAuthLoaded(true);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => listener.subscription.unsubscribe();
-  }, []);
+  const user = session?.user ?? null;
+  const authLoaded = status !== "loading";
 
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     router.push("/");
     setOpen(false);
   }

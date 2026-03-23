@@ -9,27 +9,34 @@ import { StarRating } from "@/components/star-rating";
 import { Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/search-bar";
-import { supabase } from "@/lib/supabase";
-import { getWatched, removeFromWatched } from "@/lib/db";
-import type { Database } from "@/types/database";
+import { useSession } from "next-auth/react";
+import { getWatched, removeFromWatched } from "@/lib/db-client";
 
-type WatchedItem = Database["public"]["Tables"]["watched"]["Row"];
+interface WatchedItem {
+  id: string;
+  user_id: string;
+  tmdb_id: number;
+  media_type: "movie" | "tv";
+  title: string;
+  poster_path: string | null;
+  rating: number | null;
+  note: string | null;
+  watched_at: string;
+}
 
 export default function WatchedPage() {
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? null;
   const [items, setItems] = useState<WatchedItem[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        setUserId(user.id);
-        const { data } = await getWatched(user.id);
-        setItems(data || []);
-      }
-      setLoading(false);
-    });
-  }, []);
+    if (status === "loading") return;
+    if (!userId) { setLoading(false); return; }
+    getWatched(userId).then(({ data }) => {
+      setItems((data || []) as WatchedItem[]);
+    }).finally(() => setLoading(false));
+  }, [userId, status]);
 
   async function handleRemove(id: string) {
     if (!userId) return;

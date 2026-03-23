@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Check, ChevronDown, ChevronUp, Loader2, Users } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { sendRecommendation } from "@/lib/db-client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -43,30 +43,27 @@ export function RecommendModal({
 
   async function handleSend(friendId: string) {
     setSendingId(friendId);
-    const note = notes[friendId]?.trim() || null;
+    const note = notes[friendId]?.trim() || undefined;
 
-    const { error } = await supabase.from("recommendations").insert({
-      from_user_id: userId,
-      to_user_id: friendId,
-      tmdb_id: tmdbId,
-      media_type: mediaType,
-      title,
-      poster_path: posterPath,
-      note,
-    });
+    try {
+      const { error } = await sendRecommendation(userId, friendId, {
+        tmdb_id: tmdbId,
+        media_type: mediaType,
+        title,
+        poster_path: posterPath,
+        note,
+      });
 
-    if (error) {
-      if ((error as { code?: string }).code === "23505") {
-        toast.error("Already recommended to this friend");
-        setSentToIds((prev) => [...prev, friendId]);
-      } else {
+      if (error) {
         toast.error("Failed to send recommendation");
+      } else {
+        const friendName = friends.find((f) => f.id === friendId)?.name || "your friend";
+        toast.success(`Sent to ${friendName}`);
+        setSentToIds((prev) => [...prev, friendId]);
+        setExpandNoteFor(null);
       }
-    } else {
-      const friendName = friends.find((f) => f.id === friendId)?.name || "your friend";
-      toast.success(`Sent to ${friendName}`);
-      setSentToIds((prev) => [...prev, friendId]);
-      setExpandNoteFor(null);
+    } catch {
+      toast.error("Failed to send recommendation");
     }
     setSendingId(null);
   }

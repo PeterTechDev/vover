@@ -5,6 +5,7 @@ import { Footer } from "@/components/footer";
 import { Toaster } from "sonner";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
+import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -66,12 +67,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Vover" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Navbar />
-        <main className="min-h-screen pt-16">{children}</main>
-        <Footer />
-        <Toaster theme="dark" position="bottom-right" richColors />
-        <ServiceWorkerRegister />
-        <PWAInstallPrompt />
+        <SessionProvider>
+          <Navbar />
+          <main className="min-h-screen pt-16">{children}</main>
+          <Footer />
+          <Toaster theme="dark" position="bottom-right" richColors />
+          <ServiceWorkerRegister />
+          <PWAInstallPrompt />
+        </SessionProvider>
       </body>
     </html>
   );

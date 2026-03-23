@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/star-rating";
 import { Plus, Eye, Check, Inbox, Loader2, X, Sparkles, UserPlus } from "lucide-react";
-import { addToWatchlist, markWatched } from "@/lib/db";
+import { addToWatchlist, markWatched } from "@/lib/db-client";
 import { toast } from "sonner";
 
 interface RecommendationFromUser {

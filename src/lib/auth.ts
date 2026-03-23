@@ -1,26 +1,22 @@
-import { supabase } from "./supabase";
+/**
+ * Auth helpers for Vover using NextAuth (Auth.js v5).
+ * Server-side: use `auth()` from "@/auth" directly.
+ * Client-side: use `useSession()` from "next-auth/react".
+ */
+import { auth } from "@/auth";
 
-export async function signInWithMagicLink(email: string) {
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
-  return { error };
+/**
+ * Get the current user on the server (Server Components, API routes).
+ * Returns null when not authenticated.
+ */
+export async function getServerUser() {
+  const session = await auth();
+  return session?.user ?? null;
 }
 
-export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  return { error };
-}
-
-export async function getSession() {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session;
-}
-
-export async function getUser() {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+/**
+ * Get current session (includes user.id).
+ */
+export async function getServerSession() {
+  return auth();
 }

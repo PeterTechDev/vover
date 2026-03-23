@@ -20,8 +20,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/lib/supabase";
-import { markWatched, addToWatchlist, completeOnboarding, getOrCreateInviteCode } from "@/lib/db";
+import { useSession } from "next-auth/react";
+import { markWatched, addToWatchlist, completeOnboarding, getOrCreateInviteCode } from "@/lib/db-client";
 import { posterUrl } from "@/lib/tmdb";
 import { toast } from "sonner";
 
@@ -645,7 +645,8 @@ function Step4({ name }: { name: string }) {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { data: session, status: sessionStatus } = useSession();
+  const userId = session?.user?.id ?? null;
   const [userName, setUserName] = useState<string>("");
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -656,16 +657,11 @@ export default function OnboardingPage() {
   const [watchlistAdded, setWatchlistAdded] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.push("/auth");
-        return;
-      }
-      setUserId(user.id);
-      const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "there";
-      setUserName(name);
-    });
-  }, [router]);
+    if (sessionStatus === "loading") return;
+    if (!userId) { router.push("/auth"); return; }
+    const name = session?.user?.name || session?.user?.email?.split("@")[0] || "there";
+    setUserName(name);
+  }, [userId, sessionStatus, router, session]);
 
   const canProceedStep1 = selections.size >= MIN_SELECTIONS;
 

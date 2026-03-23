@@ -1,58 +1,136 @@
-import { supabase } from "./supabase";
-
+/**
+ * Server-side database queries using Drizzle ORM + Neon.
+ * Import this only from Server Components, API routes, and Server Actions.
+ * Client components should use @/lib/db-client instead.
+ */
+import { db } from "@/db";
+import {
+  watchlist,
+  watched,
+  friendships,
+  profiles,
+  recommendations,
+  inviteCodes,
+  sharedLists,
+  sharedListMembers,
+  sharedListItems,
+} from "@/db/schema";
+import { eq, and, or, desc, sql } from "drizzle-orm";
 
 // ─── Watchlist ────────────────────────────────────────────────────────────────
 
 export async function getWatchlist(userId: string) {
-  const { data, error } = await supabase
-    .from("watchlist")
-    .select("*")
-    .eq("user_id", userId)
-    .order("added_at", { ascending: false });
-  return { data, error };
+  try {
+    const data = await db
+      .select()
+      .from(watchlist)
+      .where(eq(watchlist.userId, userId))
+      .orderBy(desc(watchlist.addedAt));
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+export async function getWatchlistWithRecommender(userId: string) {
+  try {
+    const data = await db
+      .select({
+        id: watchlist.id,
+        userId: watchlist.userId,
+        tmdbId: watchlist.tmdbId,
+        mediaType: watchlist.mediaType,
+        title: watchlist.title,
+        posterPath: watchlist.posterPath,
+        addedAt: watchlist.addedAt,
+        recommendedBy: watchlist.recommendedBy,
+        recommender: {
+          id: profiles.id,
+          name: profiles.name,
+        },
+      })
+      .from(watchlist)
+      .leftJoin(profiles, eq(watchlist.recommendedBy, profiles.id))
+      .where(eq(watchlist.userId, userId))
+      .orderBy(desc(watchlist.addedAt));
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function addToWatchlist(
   userId: string,
-  item: { tmdb_id: number; media_type: "movie" | "tv"; title: string; poster_path: string | null; recommended_by?: string | null }
+  item: {
+    tmdb_id: number;
+    media_type: "movie" | "tv";
+    title: string;
+    poster_path: string | null;
+    recommended_by?: string | null;
+  }
 ) {
-  const { data, error } = await supabase
-    .from("watchlist")
-    .insert({ user_id: userId, ...item })
-    .select()
-    .single();
-  return { data, error };
+  try {
+    const [data] = await db
+      .insert(watchlist)
+      .values({
+        userId,
+        tmdbId: item.tmdb_id,
+        mediaType: item.media_type,
+        title: item.title,
+        posterPath: item.poster_path,
+        recommendedBy: item.recommended_by ?? null,
+      })
+      .onConflictDoNothing()
+      .returning();
+    return { data: data ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function removeFromWatchlist(userId: string, id: string) {
-  const { error } = await supabase
-    .from("watchlist")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", userId);
-  return { error };
+  try {
+    await db
+      .delete(watchlist)
+      .where(and(eq(watchlist.id, id), eq(watchlist.userId, userId)));
+    return { error: null };
+  } catch (error) {
+    return { error };
+  }
 }
 
 export async function isInWatchlist(userId: string, tmdbId: number, mediaType: string) {
-  const { data } = await supabase
-    .from("watchlist")
-    .select("id")
-    .eq("user_id", userId)
-    .eq("tmdb_id", tmdbId)
-    .eq("media_type", mediaType)
-    .maybeSingle();
-  return !!data;
+  try {
+    const [row] = await db
+      .select({ id: watchlist.id })
+      .from(watchlist)
+      .where(
+        and(
+          eq(watchlist.userId, userId),
+          eq(watchlist.tmdbId, tmdbId),
+          eq(watchlist.mediaType, mediaType as "movie" | "tv")
+        )
+      )
+      .limit(1);
+    return !!row;
+  } catch {
+    return false;
+  }
 }
 
 // ─── Watched ──────────────────────────────────────────────────────────────────
 
 export async function getWatched(userId: string) {
-  const { data, error } = await supabase
-    .from("watched")
-    .select("*")
-    .eq("user_id", userId)
-    .order("watched_at", { ascending: false });
-  return { data, error };
+  try {
+    const data = await db
+      .select()
+      .from(watched)
+      .where(eq(watched.userId, userId))
+      .orderBy(desc(watched.watchedAt));
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function markWatched(
@@ -66,207 +144,424 @@ export async function markWatched(
     note?: string | null;
   }
 ) {
-  const { data, error } = await supabase
-    .from("watched")
-    .insert({ user_id: userId, ...item })
-    .select()
-    .single();
-  return { data, error };
+  try {
+    const [data] = await db
+      .insert(watched)
+      .values({
+        userId,
+        tmdbId: item.tmdb_id,
+        mediaType: item.media_type,
+        title: item.title,
+        posterPath: item.poster_path,
+        rating: item.rating ?? null,
+        note: item.note ?? null,
+      })
+      .returning();
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function removeFromWatched(userId: string, id: string) {
-  const { error } = await supabase
-    .from("watched")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", userId);
-  return { error };
+  try {
+    await db
+      .delete(watched)
+      .where(and(eq(watched.id, id), eq(watched.userId, userId)));
+    return { error: null };
+  } catch (error) {
+    return { error };
+  }
 }
 
 // ─── Friends ──────────────────────────────────────────────────────────────────
 
 export async function getFriends(userId: string) {
-  const { data, error } = await supabase
-    .from("friendships")
-    .select(`
-      id,
-      status,
-      requester_id,
-      addressee_id,
-      requester:profiles!friendships_requester_id_fkey(id, name, avatar_url),
-      addressee:profiles!friendships_addressee_id_fkey(id, name, avatar_url)
-    `)
-    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
-    .eq("status", "accepted");
-  return { data, error };
+  try {
+    const data = await db.execute(sql`
+      SELECT
+        f.id,
+        f.status,
+        f.requester_id,
+        f.addressee_id,
+        json_build_object('id', rp.id, 'name', rp.name, 'avatar_url', rp.avatar_url) AS requester,
+        json_build_object('id', ap.id, 'name', ap.name, 'avatar_url', ap.avatar_url) AS addressee
+      FROM friendships f
+      JOIN profiles rp ON rp.id = f.requester_id
+      JOIN profiles ap ON ap.id = f.addressee_id
+      WHERE f.status = 'accepted'
+        AND (f.requester_id = ${userId} OR f.addressee_id = ${userId})
+    `);
+    return { data: data.rows as FriendshipWithProfiles[], error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+export type FriendshipWithProfiles = {
+  id: string;
+  status: string;
+  requester_id: string;
+  addressee_id: string;
+  requester: { id: string; name: string | null; avatar_url: string | null };
+  addressee: { id: string; name: string | null; avatar_url: string | null };
+};
+
+export async function getFriendsByUserId(userId: string) {
+  return getFriends(userId);
 }
 
 export async function sendFriendRequest(requesterId: string, addresseeEmail: string) {
-  // Look up user by email via profile lookup
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", addresseeEmail) // email lookup requires auth.users join — handled server-side
-    .maybeSingle();
+  try {
+    // Look up user by email
+    const [addressee] = await db
+      .select({ id: profiles.id })
+      .from(profiles)
+      .where(eq(profiles.email, addresseeEmail))
+      .limit(1);
 
-  if (profileError || !profile) {
-    return { data: null, error: profileError || new Error("User not found") };
+    if (!addressee) {
+      return { data: null, error: new Error("User not found") };
+    }
+
+    const [data] = await db
+      .insert(friendships)
+      .values({ requesterId, addresseeId: addressee.id })
+      .onConflictDoNothing()
+      .returning();
+    return { data: data ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
   }
-
-  const { data, error } = await supabase
-    .from("friendships")
-    .insert({ requester_id: requesterId, addressee_id: profile.id })
-    .select()
-    .single();
-  return { data, error };
 }
 
 // ─── Feed ─────────────────────────────────────────────────────────────────────
 
 export async function getFriendActivity(userId: string) {
-  // Get accepted friend IDs
-  const { data: friendships } = await supabase
-    .from("friendships")
-    .select("requester_id, addressee_id")
-    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
-    .eq("status", "accepted");
+  try {
+    const friendRows = await db
+      .select({ requesterId: friendships.requesterId, addresseeId: friendships.addresseeId })
+      .from(friendships)
+      .where(
+        and(
+          eq(friendships.status, "accepted"),
+          or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId))
+        )
+      );
 
-  if (!friendships?.length) return { data: [], error: null };
+    if (!friendRows.length) return { data: [], error: null };
 
-  const friendIds = friendships.map((f) =>
-    f.requester_id === userId ? f.addressee_id : f.requester_id
-  );
+    const friendIds = friendRows.map((f) =>
+      f.requesterId === userId ? f.addresseeId : f.requesterId
+    );
 
-  // Get recent watched entries from friends
-  const { data: watched, error } = await supabase
-    .from("watched")
-    .select("*, user:profiles!watched_user_id_fkey(id, name, avatar_url)")
-    .in("user_id", friendIds)
-    .order("watched_at", { ascending: false })
-    .limit(30);
+    const data = await db.execute(sql`
+      SELECT w.*, json_build_object('id', p.id, 'name', p.name, 'avatar_url', p.avatar_url) AS "user"
+      FROM watched w
+      JOIN profiles p ON p.id = w.user_id
+      WHERE w.user_id = ANY(${friendIds})
+      ORDER BY w.watched_at DESC
+      LIMIT 30
+    `);
+    return { data: data.rows, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
 
-  return { data: watched, error };
+export async function getEnhancedFriendActivity(userId: string) {
+  try {
+    const friendRows = await db
+      .select({ requesterId: friendships.requesterId, addresseeId: friendships.addresseeId })
+      .from(friendships)
+      .where(
+        and(
+          eq(friendships.status, "accepted"),
+          or(eq(friendships.requesterId, userId), eq(friendships.addresseeId, userId))
+        )
+      );
+
+    if (!friendRows.length) return { data: [], error: null };
+
+    const friendIds = friendRows.map((f) =>
+      f.requesterId === userId ? f.addresseeId : f.requesterId
+    );
+
+    const [watchedRows, recRows] = await Promise.all([
+      db.execute(sql`
+        SELECT w.id, w.tmdb_id, w.media_type, w.title, w.poster_path, w.rating, w.note, w.watched_at, w.user_id,
+          json_build_object('id', p.id, 'name', p.name, 'avatar_url', p.avatar_url) AS "user"
+        FROM watched w
+        JOIN profiles p ON p.id = w.user_id
+        WHERE w.user_id = ANY(${friendIds})
+        ORDER BY w.watched_at DESC
+        LIMIT 20
+      `),
+      db.execute(sql`
+        SELECT r.id, r.tmdb_id, r.media_type, r.title, r.poster_path, r.note, r.created_at, r.from_user_id, r.to_user_id,
+          json_build_object('id', fp.id, 'name', fp.name, 'avatar_url', fp.avatar_url) AS from_user,
+          json_build_object('id', tp.id, 'name', tp.name, 'avatar_url', tp.avatar_url) AS to_user
+        FROM recommendations r
+        JOIN profiles fp ON fp.id = r.from_user_id
+        JOIN profiles tp ON tp.id = r.to_user_id
+        WHERE r.from_user_id = ANY(${friendIds}) OR r.to_user_id = ANY(${friendIds})
+        ORDER BY r.created_at DESC
+        LIMIT 20
+      `),
+    ]);
+
+    type ActivityItem = {
+      id: string;
+      type: "watched" | "recommended";
+      timestamp: string;
+      tmdb_id: number;
+      media_type: "movie" | "tv";
+      title: string;
+      poster_path: string | null;
+      rating?: number | null;
+      note?: string | null;
+      actor: { id: string; name: string | null; avatar_url: string | null } | null;
+      recipient?: { id: string; name: string | null; avatar_url: string | null } | null;
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const activities: ActivityItem[] = [
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(watchedRows.rows as any[]).map((w) => ({
+        id: `watched-${w.id}`,
+        type: "watched" as const,
+        timestamp: w.watched_at,
+        tmdb_id: w.tmdb_id,
+        media_type: w.media_type as "movie" | "tv",
+        title: w.title,
+        poster_path: w.poster_path,
+        rating: w.rating,
+        note: w.note,
+        actor: w.user,
+      })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ...(recRows.rows as any[]).map((r) => ({
+        id: `rec-${r.id}`,
+        type: "recommended" as const,
+        timestamp: r.created_at,
+        tmdb_id: r.tmdb_id,
+        media_type: r.media_type as "movie" | "tv",
+        title: r.title,
+        poster_path: r.poster_path,
+        note: r.note,
+        actor: r.from_user,
+        recipient: r.to_user,
+      })),
+    ]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 40);
+
+    return { data: activities, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 // ─── Profile ──────────────────────────────────────────────────────────────────
 
 export async function getProfile(userId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
-  return { data, error };
+  try {
+    const [data] = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .limit(1);
+    return { data: data ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
-export async function updateProfile(userId: string, updates: { name?: string; avatar_url?: string }) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .update(updates)
-    .eq("id", userId)
-    .select()
-    .single();
-  return { data, error };
+export async function updateProfile(
+  userId: string,
+  updates: { name?: string; avatar_url?: string }
+) {
+  try {
+    const [data] = await db
+      .update(profiles)
+      .set({
+        ...(updates.name !== undefined && { name: updates.name }),
+        ...(updates.avatar_url !== undefined && { avatarUrl: updates.avatar_url }),
+      })
+      .where(eq(profiles.id, userId))
+      .returning();
+    return { data: data ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+export async function ensureProfile(userId: string, email?: string, name?: string) {
+  try {
+    const existing = await db
+      .select({ id: profiles.id })
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .limit(1);
+
+    if (!existing.length) {
+      await db.insert(profiles).values({
+        id: userId,
+        email: email ?? null,
+        name: name ?? email?.split("@")[0] ?? null,
+      }).onConflictDoNothing();
+    }
+  } catch (err) {
+    console.error("[db] ensureProfile error:", err);
+  }
 }
 
 // ─── Recommendations ──────────────────────────────────────────────────────────
 
 export async function getRecommendationsForUser(userId: string) {
-  const { data, error } = await supabase
-    .from("recommendations")
-    .select("*, from_user:profiles!recommendations_from_user_id_fkey(id, name, avatar_url)")
-    .eq("to_user_id", userId)
-    .order("created_at", { ascending: false });
-  return { data, error };
+  try {
+    const data = await db.execute(sql`
+      SELECT r.*,
+        json_build_object('id', p.id, 'name', p.name, 'avatar_url', p.avatar_url) AS from_user
+      FROM recommendations r
+      JOIN profiles p ON p.id = r.from_user_id
+      WHERE r.to_user_id = ${userId}
+      ORDER BY r.created_at DESC
+    `);
+    return { data: data.rows, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
-export async function getWatchlistWithRecommender(userId: string) {
-  const { data, error } = await supabase
-    .from("watchlist")
-    .select("*, recommender:profiles!watchlist_recommended_by_fkey(id, name)")
-    .eq("user_id", userId)
-    .order("added_at", { ascending: false });
-  return { data, error };
+export async function sendRecommendation(
+  fromUserId: string,
+  toUserId: string,
+  item: {
+    tmdb_id: number;
+    media_type: "movie" | "tv";
+    title: string;
+    poster_path: string | null;
+    note?: string;
+  }
+) {
+  try {
+    const [data] = await db
+      .insert(recommendations)
+      .values({
+        fromUserId,
+        toUserId,
+        tmdbId: item.tmdb_id,
+        mediaType: item.media_type,
+        title: item.title,
+        posterPath: item.poster_path,
+        note: item.note ?? null,
+      })
+      .returning();
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 // ─── Shared Lists ─────────────────────────────────────────────────────────────
 
 export async function getSharedLists(userId: string) {
-  // Lists I created or am a member of
-  const { data: memberListIds } = await supabase
-    .from("shared_list_members")
-    .select("list_id")
-    .eq("user_id", userId);
-
-  const memberIds = (memberListIds || []).map((m) => m.list_id);
-
-  const { data, error } = await supabase
-    .from("shared_lists")
-    .select(`
-      *,
-      creator:profiles!shared_lists_created_by_fkey(id, name, avatar_url),
-      members:shared_list_members(
-        id,
-        user_id,
-        profile:profiles!shared_list_members_user_id_fkey(id, name, avatar_url)
-      ),
-      items:shared_list_items(id)
-    `)
-    .or(
-      memberIds.length > 0
-        ? `created_by.eq.${userId},id.in.(${memberIds.join(",")})`
-        : `created_by.eq.${userId}`
-    )
-    .order("created_at", { ascending: false });
-
-  return { data, error };
+  try {
+    const data = await db.execute(sql`
+      SELECT sl.*,
+        json_build_object('id', p.id, 'name', p.name, 'avatar_url', p.avatar_url) AS creator,
+        COALESCE(
+          json_agg(DISTINCT jsonb_build_object(
+            'id', slm.id, 'user_id', slm.user_id,
+            'profile', jsonb_build_object('id', mp.id, 'name', mp.name, 'avatar_url', mp.avatar_url)
+          )) FILTER (WHERE slm.id IS NOT NULL),
+          '[]'
+        ) AS members,
+        COALESCE(
+          json_agg(DISTINCT jsonb_build_object('id', sli.id)) FILTER (WHERE sli.id IS NOT NULL),
+          '[]'
+        ) AS items
+      FROM shared_lists sl
+      LEFT JOIN profiles p ON p.id = sl.created_by
+      LEFT JOIN shared_list_members slm ON slm.list_id = sl.id
+      LEFT JOIN profiles mp ON mp.id = slm.user_id
+      LEFT JOIN shared_list_items sli ON sli.list_id = sl.id
+      WHERE sl.created_by = ${userId}
+        OR sl.id IN (SELECT list_id FROM shared_list_members WHERE user_id = ${userId})
+      GROUP BY sl.id, p.id
+      ORDER BY sl.created_at DESC
+    `);
+    return { data: data.rows, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function getSharedListById(listId: string) {
-  const { data, error } = await supabase
-    .from("shared_lists")
-    .select(`
-      *,
-      creator:profiles!shared_lists_created_by_fkey(id, name, avatar_url),
-      members:shared_list_members(
-        id,
-        user_id,
-        profile:profiles!shared_list_members_user_id_fkey(id, name, avatar_url)
-      )
-    `)
-    .eq("id", listId)
-    .single();
-  return { data, error };
+  try {
+    const data = await db.execute(sql`
+      SELECT sl.*,
+        json_build_object('id', p.id, 'name', p.name, 'avatar_url', p.avatar_url) AS creator,
+        COALESCE(
+          json_agg(DISTINCT jsonb_build_object(
+            'id', slm.id, 'user_id', slm.user_id,
+            'profile', jsonb_build_object('id', mp.id, 'name', mp.name, 'avatar_url', mp.avatar_url)
+          )) FILTER (WHERE slm.id IS NOT NULL),
+          '[]'
+        ) AS members
+      FROM shared_lists sl
+      LEFT JOIN profiles p ON p.id = sl.created_by
+      LEFT JOIN shared_list_members slm ON slm.list_id = sl.id
+      LEFT JOIN profiles mp ON mp.id = slm.user_id
+      WHERE sl.id = ${listId}
+      GROUP BY sl.id, p.id
+    `);
+    return { data: data.rows[0] ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function getSharedListItems(listId: string) {
-  const { data, error } = await supabase
-    .from("shared_list_items")
-    .select(`
-      *,
-      adder:profiles!shared_list_items_added_by_fkey(id, name)
-    `)
-    .eq("list_id", listId)
-    .order("added_at", { ascending: false });
-  return { data, error };
+  try {
+    const data = await db.execute(sql`
+      SELECT sli.*,
+        json_build_object('id', p.id, 'name', p.name) AS adder
+      FROM shared_list_items sli
+      JOIN profiles p ON p.id = sli.added_by
+      WHERE sli.list_id = ${listId}
+      ORDER BY sli.added_at DESC
+    `);
+    return { data: data.rows, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function createSharedList(userId: string, name: string, description?: string) {
-  const { data, error } = await supabase
-    .from("shared_lists")
-    .insert({ created_by: userId, name, description: description || null })
-    .select()
-    .single();
-  return { data, error };
+  try {
+    const [data] = await db
+      .insert(sharedLists)
+      .values({ createdBy: userId, name, description: description ?? null })
+      .returning();
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function addMemberToList(listId: string, userId: string, invitedBy: string) {
-  const { data, error } = await supabase
-    .from("shared_list_members")
-    .insert({ list_id: listId, user_id: userId, invited_by: invitedBy })
-    .select()
-    .single();
-  return { data, error };
+  try {
+    const [data] = await db
+      .insert(sharedListMembers)
+      .values({ listId, userId, invitedBy })
+      .onConflictDoNothing()
+      .returning();
+    return { data: data ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function addItemToSharedList(
@@ -274,139 +569,69 @@ export async function addItemToSharedList(
   userId: string,
   item: { tmdb_id: number; media_type: "movie" | "tv"; title: string; poster_path: string | null }
 ) {
-  const { data, error } = await supabase
-    .from("shared_list_items")
-    .insert({ list_id: listId, added_by: userId, ...item })
-    .select()
-    .single();
-  return { data, error };
+  try {
+    const [data] = await db
+      .insert(sharedListItems)
+      .values({
+        listId,
+        addedBy: userId,
+        tmdbId: item.tmdb_id,
+        mediaType: item.media_type,
+        title: item.title,
+        posterPath: item.poster_path,
+      })
+      .onConflictDoNothing()
+      .returning();
+    return { data: data ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function removeItemFromSharedList(itemId: string) {
-  const { error } = await supabase.from("shared_list_items").delete().eq("id", itemId);
-  return { error };
+  try {
+    await db.delete(sharedListItems).where(eq(sharedListItems.id, itemId));
+    return { error: null };
+  } catch (error) {
+    return { error };
+  }
 }
 
 export async function deleteSharedList(listId: string) {
-  const { error } = await supabase.from("shared_lists").delete().eq("id", listId);
-  return { error };
-}
-
-export async function getFriendsByUserId(userId: string) {
-  const { data, error } = await supabase
-    .from("friendships")
-    .select(`
-      id,
-      requester_id,
-      addressee_id,
-      requester:profiles!friendships_requester_id_fkey(id, name, avatar_url),
-      addressee:profiles!friendships_addressee_id_fkey(id, name, avatar_url)
-    `)
-    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
-    .eq("status", "accepted");
-  return { data, error };
-}
-
-// ─── Enhanced Feed ────────────────────────────────────────────────────────────
-
-export async function getEnhancedFriendActivity(userId: string) {
-  // Get accepted friend IDs
-  const { data: friendships } = await supabase
-    .from("friendships")
-    .select("requester_id, addressee_id")
-    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`)
-    .eq("status", "accepted");
-
-  if (!friendships?.length) return { data: [], error: null };
-
-  const friendIds = friendships.map((f) =>
-    f.requester_id === userId ? f.addressee_id : f.requester_id
-  );
-
-  // Fetch watched activity from friends
-  const { data: watched } = await supabase
-    .from("watched")
-    .select("id, tmdb_id, media_type, title, poster_path, rating, note, watched_at, user_id, user:profiles!watched_user_id_fkey(id, name, avatar_url)")
-    .in("user_id", friendIds)
-    .order("watched_at", { ascending: false })
-    .limit(20);
-
-  // Fetch recommendations sent BY friends or TO friends (visible to current user)
-  const { data: recs } = await supabase
-    .from("recommendations")
-    .select("id, tmdb_id, media_type, title, poster_path, note, created_at, from_user_id, to_user_id, from_user:profiles!recommendations_from_user_id_fkey(id, name, avatar_url), to_user:profiles!recommendations_to_user_id_fkey(id, name, avatar_url)")
-    .or(`from_user_id.in.(${friendIds.join(",")}),to_user_id.in.(${friendIds.join(",")})`)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
-  // Normalize into a unified activity list
-  type ActivityItem = {
-    id: string;
-    type: "watched" | "recommended";
-    timestamp: string;
-    tmdb_id: number;
-    media_type: "movie" | "tv";
-    title: string;
-    poster_path: string | null;
-    rating?: number | null;
-    note?: string | null;
-    actor: { id: string; name: string | null; avatar_url: string | null } | null;
-    recipient?: { id: string; name: string | null; avatar_url: string | null } | null;
-  };
-
-  const activities: ActivityItem[] = [
-    ...((watched || []).map((w) => ({
-      id: `watched-${w.id}`,
-      type: "watched" as const,
-      timestamp: w.watched_at,
-      tmdb_id: w.tmdb_id,
-      media_type: w.media_type as "movie" | "tv",
-      title: w.title,
-      poster_path: w.poster_path,
-      rating: w.rating,
-      note: w.note,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      actor: (w as any).user,
-    }))),
-    ...((recs || []).map((r) => ({
-      id: `rec-${r.id}`,
-      type: "recommended" as const,
-      timestamp: r.created_at,
-      tmdb_id: r.tmdb_id,
-      media_type: r.media_type as "movie" | "tv",
-      title: r.title,
-      poster_path: r.poster_path,
-      note: r.note,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      actor: (r as any).from_user,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recipient: (r as any).to_user,
-    }))),
-  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, 40);
-
-  return { data: activities, error: null };
+  try {
+    await db.delete(sharedLists).where(eq(sharedLists.id, listId));
+    return { error: null };
+  } catch (error) {
+    return { error };
+  }
 }
 
 // ─── Onboarding ───────────────────────────────────────────────────────────────
 
 export async function completeOnboarding(userId: string) {
-  const { data, error } = await supabase
-    .from("profiles")
-    .update({ onboarding_completed: true })
-    .eq("id", userId)
-    .select()
-    .single();
-  return { data, error };
+  try {
+    const [data] = await db
+      .update(profiles)
+      .set({ onboardingCompleted: true })
+      .where(eq(profiles.id, userId))
+      .returning();
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function isOnboardingCompleted(userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("onboarding_completed")
-    .eq("id", userId)
-    .single();
-  return data?.onboarding_completed === true;
+  try {
+    const [row] = await db
+      .select({ onboardingCompleted: profiles.onboardingCompleted })
+      .from(profiles)
+      .where(eq(profiles.id, userId))
+      .limit(1);
+    return row?.onboardingCompleted === true;
+  } catch {
+    return false;
+  }
 }
 
 // ─── Invite Codes ─────────────────────────────────────────────────────────────
@@ -420,79 +645,94 @@ function generateCode(): string {
   return code;
 }
 
-export async function getOrCreateInviteCode(userId: string): Promise<{ code: string | null; error: Error | null }> {
-  // Try to get existing code
-  const { data: existing } = await supabase
-    .from("invite_codes")
-    .select("code")
-    .eq("user_id", userId)
-    .maybeSingle();
+export async function getOrCreateInviteCode(
+  userId: string
+): Promise<{ code: string | null; error: Error | null }> {
+  try {
+    const [existing] = await db
+      .select({ code: inviteCodes.code })
+      .from(inviteCodes)
+      .where(eq(inviteCodes.userId, userId))
+      .limit(1);
 
-  if (existing?.code) return { code: existing.code, error: null };
+    if (existing?.code) return { code: existing.code, error: null };
 
-  // Create new code (retry on collision)
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const code = generateCode();
-    const { data, error } = await supabase
-      .from("invite_codes")
-      .insert({ user_id: userId, code })
-      .select("code")
-      .single();
-    if (!error && data) return { code: data.code, error: null };
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateCode();
+      try {
+        const [data] = await db
+          .insert(inviteCodes)
+          .values({ userId, code })
+          .onConflictDoNothing()
+          .returning({ code: inviteCodes.code });
+        if (data) return { code: data.code, error: null };
+      } catch {
+        // collision — retry
+      }
+    }
+
+    return { code: null, error: new Error("Failed to generate invite code") };
+  } catch (error) {
+    return { code: null, error: error as Error };
   }
-
-  return { code: null, error: new Error("Failed to generate invite code") };
 }
 
 export async function getInviteByCode(code: string) {
-  const { data, error } = await supabase
-    .from("invite_codes")
-    .select("*, owner:profiles!invite_codes_user_id_fkey(id, name, avatar_url)")
-    .eq("code", code)
-    .maybeSingle();
-  return { data, error };
+  try {
+    const data = await db.execute(sql`
+      SELECT ic.*, json_build_object('id', p.id, 'name', p.name, 'avatar_url', p.avatar_url) AS owner
+      FROM invite_codes ic
+      JOIN profiles p ON p.id = ic.user_id
+      WHERE ic.code = ${code}
+    `);
+    return { data: data.rows[0] ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function incrementInviteUses(code: string) {
-  // Increment uses using RPC or raw update
-  const { data: current } = await supabase
-    .from("invite_codes")
-    .select("uses")
-    .eq("code", code)
-    .single();
-  
-  if (current) {
-    await supabase
-      .from("invite_codes")
-      .update({ uses: current.uses + 1 })
-      .eq("code", code);
+  try {
+    await db
+      .update(inviteCodes)
+      .set({ uses: sql`${inviteCodes.uses} + 1` })
+      .where(eq(inviteCodes.code, code));
+  } catch (err) {
+    console.error("[db] incrementInviteUses error:", err);
   }
 }
 
 export async function acceptInviteAndFriend(inviterUserId: string, newUserId: string) {
-  // Increment uses
-  const { data: inviteCode } = await supabase
-    .from("invite_codes")
-    .select("code")
-    .eq("user_id", inviterUserId)
-    .single();
-  
-  if (inviteCode) await incrementInviteUses(inviteCode.code);
+  try {
+    // Increment uses
+    const [inviteCode] = await db
+      .select({ code: inviteCodes.code })
+      .from(inviteCodes)
+      .where(eq(inviteCodes.userId, inviterUserId))
+      .limit(1);
 
-  // Create friendship (inviter → new user)
-  const { data, error } = await supabase
-    .from("friendships")
-    .insert({ requester_id: inviterUserId, addressee_id: newUserId, status: "accepted" })
-    .select()
-    .single();
-  return { data, error };
+    if (inviteCode) await incrementInviteUses(inviteCode.code);
+
+    const [data] = await db
+      .insert(friendships)
+      .values({ requesterId: inviterUserId, addresseeId: newUserId, status: "accepted" })
+      .onConflictDoNothing()
+      .returning();
+    return { data: data ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }
 
 export async function getInviteStats(userId: string) {
-  const { data, error } = await supabase
-    .from("invite_codes")
-    .select("code, uses")
-    .eq("user_id", userId)
-    .maybeSingle();
-  return { data, error };
+  try {
+    const [data] = await db
+      .select({ code: inviteCodes.code, uses: inviteCodes.uses })
+      .from(inviteCodes)
+      .where(eq(inviteCodes.userId, userId))
+      .limit(1);
+    return { data: data ?? null, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 }

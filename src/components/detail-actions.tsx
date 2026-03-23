@@ -8,8 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "@/components/star-rating";
 import { RecommendModal } from "@/components/recommend-modal";
 import { Plus, Eye, Send, Check, LogIn } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { addToWatchlist, markWatched, isInWatchlist, getFriends } from "@/lib/db";
+import { useSession } from "next-auth/react";
+import { addToWatchlist, markWatched, isInWatchlist, getFriends } from "@/lib/db-client";
 import { toast } from "sonner";
 
 interface Friend {
@@ -26,7 +26,9 @@ interface DetailActionsProps {
 
 export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailActionsProps) {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? null;
+
   const [addedToWatchlist, setAddedToWatchlist] = useState(false);
   const [markedWatched, setMarkedWatched] = useState(false);
   const [watchedRating, setWatchedRating] = useState(0);
@@ -37,22 +39,19 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (user) {
-        setUserId(user.id);
-        isInWatchlist(user.id, tmdbId, mediaType).then(setAddedToWatchlist);
-        const { data: friendships } = await getFriends(user.id);
-        if (friendships) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const friendList: Friend[] = friendships.map((f: Record<string, any>) => {
-            const friend = f.requester_id === user.id ? f.addressee : f.requester;
-            return { id: friend?.id || "", name: friend?.name || "Unknown" };
-          });
-          setFriends(friendList);
-        }
+    if (status === "loading" || !userId) return;
+    isInWatchlist(userId, tmdbId, mediaType).then(setAddedToWatchlist).catch(() => {});
+    getFriends(userId).then(({ data: friendships }) => {
+      if (friendships) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const friendList: Friend[] = (friendships as any[]).map((f) => {
+          const friend = f.requester_id === userId ? f.addressee : f.requester;
+          return { id: friend?.id || "", name: friend?.name || "Unknown" };
+        });
+        setFriends(friendList);
       }
-    });
-  }, [tmdbId, mediaType]);
+    }).catch(() => {});
+  }, [userId, status, tmdbId, mediaType]);
 
   function requireAuth() {
     router.push("/auth");
@@ -92,6 +91,8 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
     setLoading(false);
   }
 
+  if (status === "loading") return null;
+
   if (!userId) {
     return (
       <div className="flex items-center gap-3 pt-2">
@@ -105,7 +106,6 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
 
   return (
     <div className="flex flex-wrap gap-3 pt-2">
-      {/* Add to Watchlist */}
       <Button
         variant={addedToWatchlist ? "secondary" : "default"}
         onClick={handleAddToWatchlist}
@@ -116,7 +116,6 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
         {addedToWatchlist ? "In Watchlist" : "Add to Watchlist"}
       </Button>
 
-      {/* Mark as Watched */}
       <Dialog open={watchedDialogOpen} onOpenChange={setWatchedDialogOpen}>
         <DialogTrigger asChild>
           <Button variant="secondary" className="gap-2" disabled={markedWatched}>
@@ -149,7 +148,6 @@ export function DetailActions({ tmdbId, mediaType, title, posterPath }: DetailAc
         </DialogContent>
       </Dialog>
 
-      {/* Recommend — one-tap modal */}
       <Button
         variant="outline"
         className="gap-2"

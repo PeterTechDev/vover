@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import { getWatched } from "@/lib/db";
+import { useSession } from "next-auth/react";
+import { getWatched } from "@/lib/db-client";
 import {
   BarChart,
   Bar,
@@ -68,24 +68,20 @@ const RATING_COLORS = [
 const CHART_COLOR = "hsl(164, 84%, 40%)";
 
 export function StatsClient() {
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id ?? null;
   const [watched, setWatched] = useState<WatchedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [authed, setAuthed] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        setAuthed(false);
-        setLoading(false);
-        return;
-      }
-      const { data } = await getWatched(user.id);
+    if (status === "loading") return;
+    if (!userId) { setLoading(false); return; }
+    getWatched(userId).then(({ data }) => {
       setWatched((data || []) as WatchedItem[]);
-      setLoading(false);
-    });
-  }, []);
+    }).finally(() => setLoading(false));
+  }, [userId, status]);
 
-  if (!authed) {
+  if (status !== "loading" && !userId) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">

@@ -4,13 +4,13 @@ import { useState, useEffect } from "react";
 import { MediaCard } from "@/components/media-card";
 import { SearchBar } from "@/components/search-bar";
 import { getTrendingClient, type TMDBMediaItem } from "@/lib/tmdb-client";
-import { supabase } from "@/lib/supabase";
+import { useSession } from "next-auth/react";
 import {
   getWatchlist,
   getWatched,
   getFriendActivity,
   getRecommendationsForUser,
-} from "@/lib/db";
+} from "@/lib/db-client";
 import {
   TrendingUp,
   List,
@@ -36,7 +36,6 @@ function getMediaType(item: TMDBMediaItem): "movie" | "tv" {
   return item.media_type === "tv" ? "tv" : "movie";
 }
 
-// Horizontal scroll section
 function HorizontalSection({
   title,
   icon: Icon,
@@ -67,14 +66,10 @@ function HorizontalSection({
           </Link>
         )}
       </div>
-
       {loading ? (
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="aspect-[2/3] w-[140px] flex-shrink-0 rounded-lg animate-shimmer"
-            />
+            <div key={i} className="aspect-[2/3] w-[140px] flex-shrink-0 rounded-lg animate-shimmer" />
           ))}
         </div>
       ) : empty ? (
@@ -86,7 +81,6 @@ function HorizontalSection({
   );
 }
 
-// Grid section
 function GridSection({
   title,
   icon: Icon,
@@ -165,10 +159,11 @@ interface Recommendation {
   media_type: "movie" | "tv";
   title: string;
   poster_path: string | null;
-  recommender?: { name: string | null } | null;
+  from_user?: { name: string | null } | null;
 }
 
 export function HomeLoggedIn({ userName }: { userName: string | null }) {
+  const { data: session, status } = useSession();
   const [trending, setTrending] = useState<TMDBMediaItem[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [recentlyWatched, setRecentlyWatched] = useState<WatchedItem[]>([]);
@@ -182,7 +177,6 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
     : "Welcome back";
 
   useEffect(() => {
-    // Load trending
     getTrendingClient("all", "week")
       .then((data) => {
         setTrending(
@@ -192,40 +186,41 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         );
       })
       .finally(() => setLoadingTrending(false));
+  }, []);
 
-    // Load personal data
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const [wlRes, watchedRes, feedRes, recsRes] = await Promise.all([
-        getWatchlist(user.id),
-        getWatched(user.id),
-        getFriendActivity(user.id),
-        getRecommendationsForUser(user.id),
-      ]);
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session?.user?.id) {
+      setLoadingPersonal(false);
+      return;
+    }
+    const userId = session.user.id;
+    Promise.all([
+      getWatchlist(userId),
+      getWatched(userId),
+      getFriendActivity(userId),
+      getRecommendationsForUser(userId),
+    ]).then(([wlRes, watchedRes, feedRes, recsRes]) => {
       setWatchlist((wlRes.data || []) as WatchlistItem[]);
       setRecentlyWatched(((watchedRes.data || []) as WatchedItem[]).slice(0, 8));
       setFriendsWatching(((feedRes.data || []) as FeedEntry[]).slice(0, 8));
       setRecommendations(((recsRes.data || []) as Recommendation[]).slice(0, 8));
       setLoadingPersonal(false);
-    });
-  }, []);
+    }).catch(() => setLoadingPersonal(false));
+  }, [session, status]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      {/* ── Greeting + Search ── */}
       <section className="animate-slide-up mb-10">
         <div className="mb-6">
           <h1 className="mb-1 text-2xl font-bold md:text-3xl">{greeting}</h1>
-          <p className="text-muted-foreground">
-            What are you in the mood for tonight?
-          </p>
+          <p className="text-muted-foreground">What are you in the mood for tonight?</p>
         </div>
         <div className="max-w-xl">
           <SearchBar large />
         </div>
       </section>
 
-      {/* ── Watchlist (Up Next) ── */}
       <HorizontalSection
         title="Up Next"
         icon={List}
@@ -238,33 +233,20 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
             </div>
             <div>
               <p className="font-medium text-sm">Your watchlist is empty</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Browse trending titles below and start saving
-              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">Browse trending titles below and start saving</p>
             </div>
           </div>
         }
       >
         {watchlist.slice(0, 8).map((item) => (
           <div key={item.id} className="w-[140px] flex-shrink-0">
-            <MediaCard
-              tmdbId={item.tmdb_id}
-              mediaType={item.media_type}
-              title={item.title}
-              posterPath={item.poster_path}
-            />
+            <MediaCard tmdbId={item.tmdb_id} mediaType={item.media_type} title={item.title} posterPath={item.poster_path} />
           </div>
         ))}
       </HorizontalSection>
 
-      {/* ── Recommendations For You ── */}
       {(loadingPersonal || recommendations.length > 0) && (
-        <HorizontalSection
-          title="Recommended For You"
-          icon={Sparkles}
-          href="/recommendations"
-          loading={loadingPersonal}
-        >
+        <HorizontalSection title="Recommended For You" icon={Sparkles} href="/recommendations" loading={loadingPersonal}>
           {recommendations.map((item) => (
             <div key={item.id} className="w-[140px] flex-shrink-0">
               <MediaCard
@@ -272,14 +254,13 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
                 mediaType={item.media_type}
                 title={item.title}
                 posterPath={item.poster_path}
-                recommendedBy={item.recommender?.name ?? null}
+                recommendedBy={item.from_user?.name ?? null}
               />
             </div>
           ))}
         </HorizontalSection>
       )}
 
-      {/* ── Friends Are Watching ── */}
       <HorizontalSection
         title="Friends Are Watching"
         icon={Users}
@@ -293,9 +274,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
             <div>
               <p className="font-medium text-sm">No friend activity yet</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                <Link href="/profile" className="text-primary hover:underline underline-offset-2">
-                  Add friends
-                </Link>{" "}
+                <Link href="/profile" className="text-primary hover:underline underline-offset-2">Add friends</Link>{" "}
                 to see what they&apos;re watching
               </p>
             </div>
@@ -304,45 +283,22 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
       >
         {friendsWatching.map((item) => (
           <div key={item.id} className="w-[140px] flex-shrink-0">
-            <MediaCard
-              tmdbId={item.tmdb_id}
-              mediaType={item.media_type}
-              title={item.title}
-              posterPath={item.poster_path}
-              rating={item.rating}
-            />
+            <MediaCard tmdbId={item.tmdb_id} mediaType={item.media_type} title={item.title} posterPath={item.poster_path} rating={item.rating} />
           </div>
         ))}
       </HorizontalSection>
 
-      {/* ── Recently Watched ── */}
       {(loadingPersonal || recentlyWatched.length > 0) && (
-        <HorizontalSection
-          title="Recently Watched"
-          icon={Eye}
-          href="/watched"
-          loading={loadingPersonal}
-        >
+        <HorizontalSection title="Recently Watched" icon={Eye} href="/watched" loading={loadingPersonal}>
           {recentlyWatched.map((item) => (
             <div key={item.id} className="w-[140px] flex-shrink-0">
-              <MediaCard
-                tmdbId={item.tmdb_id}
-                mediaType={item.media_type}
-                title={item.title}
-                posterPath={item.poster_path}
-                rating={item.rating}
-              />
+              <MediaCard tmdbId={item.tmdb_id} mediaType={item.media_type} title={item.title} posterPath={item.poster_path} rating={item.rating} />
             </div>
           ))}
         </HorizontalSection>
       )}
 
-      {/* ── Trending ── */}
-      <GridSection
-        title="Trending This Week"
-        icon={TrendingUp}
-        loading={loadingTrending}
-      >
+      <GridSection title="Trending This Week" icon={TrendingUp} loading={loadingTrending}>
         {trending.map((item) => (
           <MediaCard
             key={`${item.media_type}-${item.id}`}
@@ -356,25 +312,21 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         ))}
       </GridSection>
 
-      {/* ── Footer nudge if empty state ── */}
-      {!loadingPersonal &&
-        watchlist.length === 0 &&
-        recentlyWatched.length === 0 && (
-          <section className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-8 text-center">
-            <Clapperboard className="mx-auto mb-3 h-10 w-10 text-primary" />
-            <h3 className="mb-2 font-semibold">You&apos;re all set up</h3>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Click any title above to add it to your watchlist or mark it as
-              watched.
-            </p>
-            <Link href="/profile">
-              <Button variant="outline" className="gap-2">
-                <Users className="h-4 w-4" />
-                Add Friends
-              </Button>
-            </Link>
-          </section>
-        )}
+      {!loadingPersonal && watchlist.length === 0 && recentlyWatched.length === 0 && (
+        <section className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-8 text-center">
+          <Clapperboard className="mx-auto mb-3 h-10 w-10 text-primary" />
+          <h3 className="mb-2 font-semibold">You&apos;re all set up</h3>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Click any title above to add it to your watchlist or mark it as watched.
+          </p>
+          <Link href="/profile">
+            <Button variant="outline" className="gap-2">
+              <Users className="h-4 w-4" />
+              Add Friends
+            </Button>
+          </Link>
+        </section>
+      )}
     </div>
   );
 }
