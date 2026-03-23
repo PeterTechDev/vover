@@ -156,14 +156,14 @@ export function Navbar() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            ) : pathname !== "/auth" ? (
               <Link href="/auth">
                 <Button size="sm" className="gap-2">
                   <LogIn className="h-4 w-4" />
                   Sign In
                 </Button>
               </Link>
-            )
+            ) : null
           )}
         </div>
 

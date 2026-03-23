@@ -331,7 +331,7 @@ export async function LandingPage() {
               >
                 <div className="mb-3 flex gap-0.5">
                   {Array.from({ length: t.stars }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                    <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
                 <p className="text-sm text-foreground/80 leading-relaxed mb-4">

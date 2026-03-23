@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { Mail, Check, Film, Sparkles, Users, List } from "lucide-react";
+import { Mail, Check, Film, Sparkles, Users, List, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -86,8 +86,10 @@ export function AuthForm() {
             <>
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <label htmlFor="email" className="sr-only">Email address</label>
+                  <Mail aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
+                    id="email"
                     type="email"
                     placeholder="your@email.com"
                     value={email}
@@ -107,12 +109,22 @@ export function AuthForm() {
                   disabled={loading || !email.trim()}
                   className="h-11 w-full font-semibold"
                 >
-                  {loading ? "Sending..." : "Send Magic Link"}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Magic Link"
+                  )}
                 </Button>
+                <p className="text-center text-xs text-muted-foreground mt-2">
+                  New here? Signing in will create your account.
+                </p>
               </form>
 
               <div className="mt-6 border-t border-border/50 pt-6">
-                <p className="mb-3 text-center text-xs text-muted-foreground">
+                <p className="mb-3 text-center text-sm text-muted-foreground">
                   What you get with Vover
                 </p>
                 <div className="flex flex-col gap-2">
@@ -135,7 +147,11 @@ export function AuthForm() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          By signing in, you agree to our terms of service.
+          By signing in, you agree to our{" "}
+          <Link href="/terms" className="underline underline-offset-2 hover:text-foreground transition-colors">
+            terms of service
+          </Link>
+          .
         </p>
       </div>
     </div>

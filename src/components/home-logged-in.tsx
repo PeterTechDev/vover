@@ -60,7 +60,7 @@ function HorizontalSection({
         </div>
         {href && (
           <Link href={href}>
-            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" className="gap-1 text-primary/80 hover:text-primary">
               See all <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
@@ -75,7 +75,10 @@ function HorizontalSection({
       ) : empty ? (
         empty
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">{children}</div>
+        <div className="relative">
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">{children}</div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent" />
+        </div>
       )}
     </section>
   );
@@ -103,7 +106,7 @@ function GridSection({
         </div>
         {href && (
           <Link href={href}>
-            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
+            <Button variant="ghost" size="sm" className="gap-1 text-primary/80 hover:text-primary">
               See all <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           </Link>
@@ -230,7 +233,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         loading={loadingPersonal}
         empty={
           <div className="flex items-center gap-4 rounded-xl border border-dashed border-border/50 bg-card/30 p-6 transition-colors hover:border-primary/30">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary/50">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary/50">
               <List className="h-6 w-6" />
             </div>
             <div>
@@ -270,7 +273,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         loading={loadingPersonal}
         empty={
           <div className="flex items-center gap-4 rounded-xl border border-dashed border-border/50 bg-card/30 p-6 transition-colors hover:border-primary/30">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary/50">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary/50">
               <Users className="h-6 w-6" />
             </div>
             <div>
@@ -300,7 +303,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         </HorizontalSection>
       )}
 
-      <GridSection title="Trending This Week" icon={TrendingUp} loading={loadingTrending}>
+      <GridSection title="Trending This Week" icon={TrendingUp} href="/discover" loading={loadingTrending}>
         {trending.map((item) => (
           <MediaCard
             key={`${item.media_type}-${item.id}`}

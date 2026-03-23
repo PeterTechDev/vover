@@ -43,19 +43,19 @@ export function Footer({ isLoggedIn = false }: FooterProps) {
             </div>
             <div className="flex flex-col gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">Company</p>
-              <span className="text-muted-foreground/50 cursor-default select-none">About</span>
-              <span className="text-muted-foreground/50 cursor-default select-none">Privacy</span>
-              <span className="text-muted-foreground/50 cursor-default select-none">Terms</span>
+              <Link href="/about" className="text-muted-foreground/60 hover:text-foreground transition-colors">About</Link>
+              <Link href="/privacy" className="text-muted-foreground/60 hover:text-foreground transition-colors">Privacy</Link>
+              <Link href="/terms" className="text-muted-foreground/60 hover:text-foreground transition-colors">Terms</Link>
             </div>
           </div>
         </div>
 
         {/* Bottom bar */}
         <div className="mt-8 flex flex-col items-center gap-2 border-t border-border/20 pt-6 text-center md:flex-row md:justify-between">
-          <p className="text-xs text-muted-foreground/60">
+          <p className="text-xs text-muted-foreground/80">
             &copy; {year} Vover. All rights reserved.
           </p>
-          <p className="text-xs text-muted-foreground/40">
+          <p className="text-xs text-muted-foreground/70">
             Movie data provided by{" "}
             <a
               href="https://www.themoviedb.org"

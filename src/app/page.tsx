@@ -11,7 +11,7 @@ export default async function HomePage() {
   }
 
   if (user) {
-    const userName = user.name ?? user.email ?? null;
+    const userName = user.name ?? null;
     return <HomeLoggedIn userName={userName} />;
   }
 
