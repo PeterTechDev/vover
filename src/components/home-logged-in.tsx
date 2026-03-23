@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { MediaCard } from "@/components/media-card";
 import { SearchBar } from "@/components/search-bar";
-import { getTrendingClient, type TMDBMediaItem } from "@/lib/tmdb-client";
+import type { TMDBMediaItem } from "@/lib/tmdb-client";
 import { useSession } from "next-auth/react";
 import {
   getWatchlist,
@@ -177,14 +177,16 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
     : "Welcome back";
 
   useEffect(() => {
-    getTrendingClient("all", "week")
+    fetch("/api/trending")
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.status)))
       .then((data) => {
         setTrending(
-          data.results
+          (data.results as TMDBMediaItem[])
             .filter((r) => r.media_type === "movie" || r.media_type === "tv")
             .slice(0, 12)
         );
       })
+      .catch(() => {/* leave trending empty on error */})
       .finally(() => setLoadingTrending(false));
   }, []);
 

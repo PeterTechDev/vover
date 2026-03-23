@@ -7,6 +7,7 @@ import {
   uuid,
   pgEnum,
   unique,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
@@ -54,7 +55,7 @@ export const verificationTokens = pgTable("verification_tokens", {
   token: text("token").notNull(),
   expires: timestamp("expires", { mode: "date" }).notNull(),
 }, (t) => ({
-  pk: unique().on(t.identifier, t.token),
+  compositePk: primaryKey({ columns: [t.identifier, t.token] }),
 }));
 
 // ─── App Tables ───────────────────────────────────────────────────────────────
