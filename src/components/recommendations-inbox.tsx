@@ -7,7 +7,7 @@ import { posterUrl } from "@/lib/tmdb";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/star-rating";
-import { Plus, Eye, Check, Inbox, Users, Loader2, X, Sparkles } from "lucide-react";
+import { Plus, Eye, Check, Inbox, Loader2, X, Sparkles, UserPlus } from "lucide-react";
 import { addToWatchlist, markWatched } from "@/lib/db";
 import { toast } from "sonner";
 
@@ -61,10 +61,22 @@ export function RecommendationsInbox({
   if (recommendations.length === 0) {
     if (showAll) {
       return (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border/60 py-12 text-center">
-          <Users className="h-10 w-10 text-muted-foreground/40" />
-          <p className="text-muted-foreground">No recommendations yet</p>
-          <p className="text-sm text-muted-foreground/70">Share the app with friends to get personalized picks</p>
+        <div className="flex flex-col items-center gap-5 rounded-xl border border-dashed border-border/60 py-16 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/8 border border-primary/15">
+            <Sparkles className="h-8 w-8 text-primary/40" />
+          </div>
+          <div className="max-w-xs">
+            <p className="font-semibold text-foreground">No recommendations yet</p>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Add friends and they can start sending you personalized movie and TV picks.
+            </p>
+          </div>
+          <Link href="/profile">
+            <Button size="sm" className="gap-2">
+              <UserPlus className="h-4 w-4" />
+              Find Friends
+            </Button>
+          </Link>
         </div>
       );
     }
