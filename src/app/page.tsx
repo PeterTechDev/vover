@@ -11,7 +11,7 @@ export default async function HomePage() {
   }
 
   if (user) {
-    const userName = user.name ?? user.email?.split("@")[0] ?? null;
+    const userName = user.name ?? user.email ?? null;
     return <HomeLoggedIn userName={userName} />;
   }
 
