@@ -1,6 +1,10 @@
 import Link from "next/link";
 
-export function Footer() {
+interface FooterProps {
+  isLoggedIn?: boolean;
+}
+
+export function Footer({ isLoggedIn = false }: FooterProps) {
   const year = new Date().getFullYear();
   return (
     <footer className="mt-auto border-t border-border/30 bg-background px-4 py-10">
@@ -31,7 +35,11 @@ export function Footer() {
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">Account</p>
               <Link href="/watchlist" className="text-muted-foreground hover:text-foreground transition-colors">Watchlist</Link>
               <Link href="/watched" className="text-muted-foreground hover:text-foreground transition-colors">Watched</Link>
-              <Link href="/auth" className="text-muted-foreground hover:text-foreground transition-colors">Sign In</Link>
+              {isLoggedIn ? (
+                <Link href="/profile" className="text-muted-foreground hover:text-foreground transition-colors">Profile</Link>
+              ) : (
+                <Link href="/auth" className="text-muted-foreground hover:text-foreground transition-colors">Sign In</Link>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">Company</p>

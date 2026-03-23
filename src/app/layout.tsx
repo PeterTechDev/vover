@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { ServiceWorkerRegister } from "@/components/sw-register";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { SessionProvider } from "next-auth/react";
+import { auth } from "@/auth";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -52,11 +53,12 @@ export const viewport: Viewport = {
   themeColor: "#0bbf7a",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
   return (
     <html lang="en" className="dark">
       <head>
@@ -70,7 +72,7 @@ export default function RootLayout({
         <SessionProvider>
           <Navbar />
           <main className="min-h-screen pt-16">{children}</main>
-          <Footer />
+          <Footer isLoggedIn={!!session} />
           <Toaster theme="dark" position="bottom-right" richColors />
           <ServiceWorkerRegister />
           <PWAInstallPrompt />
