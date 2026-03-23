@@ -58,8 +58,8 @@ export function Navbar() {
   return (
     <header className="fixed top-0 z-50 w-full border-b border-border/30 bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="group flex items-center gap-2 transition-opacity hover:opacity-85">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground font-extrabold text-sm shadow-lg shadow-primary/30">
+        <Link href="/" className="group flex items-center gap-2 transition-all duration-200 hover:opacity-90 hover:scale-[1.02]">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground font-extrabold text-sm shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-shadow duration-200">
             V
           </div>
           <span className="text-lg font-extrabold tracking-tight">over</span>
