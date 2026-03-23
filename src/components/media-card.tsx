@@ -27,7 +27,7 @@ export function MediaCard({
   return (
     <Link
       href={`/${mediaType}/${tmdbId}`}
-      className="group relative flex flex-col overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="group relative flex flex-col overflow-hidden rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background transition-transform duration-300 hover:-translate-y-1"
     >
       {/* Poster */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-secondary/50 rounded-xl">

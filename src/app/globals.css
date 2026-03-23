@@ -173,6 +173,13 @@
   }
 }
 
+/* Micro-interaction: subtle press feedback on links */
+@layer utilities {
+  .press-feedback:active {
+    transform: scale(0.97);
+  }
+}
+
 /* Custom scrollbar for light areas */
 ::-webkit-scrollbar {
   width: 6px;
