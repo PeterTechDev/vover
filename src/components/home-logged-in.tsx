@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { MediaCard } from "@/components/media-card";
 import { SearchBar } from "@/components/search-bar";
 import type { TMDBMediaItem } from "@/lib/tmdb-client";
@@ -22,7 +22,7 @@ import {
   Film,
   Tv,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -54,6 +54,16 @@ function HorizontalSection({
   loading?: boolean;
   empty?: React.ReactNode;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      const direction = e.key === "ArrowRight" ? 1 : -1;
+      scrollRef.current?.scrollBy({ left: direction * 200, behavior: "smooth" });
+    }
+  }, []);
+
   return (
     <section className="mb-10">
       <div className="mb-4 flex items-center justify-between">
@@ -62,10 +72,11 @@ function HorizontalSection({
           <h2 className="text-lg font-semibold">{title}</h2>
         </div>
         {href && (
-          <Link href={href}>
-            <Button variant="ghost" size="sm" className="gap-1 text-primary/80 hover:text-primary">
-              See all <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
+          <Link
+            href={href}
+            className={buttonVariants({ variant: "ghost", size: "sm" }) + " gap-1 text-primary hover:text-primary"}
+          >
+            See all <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         )}
       </div>
@@ -79,7 +90,16 @@ function HorizontalSection({
         empty
       ) : (
         <div className="relative">
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">{children}</div>
+          <div
+            ref={scrollRef}
+            role="region"
+            aria-label={title}
+            tabIndex={0}
+            onKeyDown={handleKeyDown}
+            className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
+          >
+            {children}
+          </div>
           <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background to-transparent" />
         </div>
       )}
