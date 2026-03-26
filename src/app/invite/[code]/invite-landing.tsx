@@ -47,6 +47,7 @@ const perks = [
 export default function InviteLanding({
   code,
   inviterName,
+  inviterId,
   inviterAvatar,
   inviteUses,
   recentActivity,
@@ -123,11 +124,13 @@ export default function InviteLanding({
           </div>
 
           {/* Social proof: recent activity */}
-          {recentActivity.length > 0 && (
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-2">
-                {firstName}&apos;s recent watches
-              </p>
+          <div>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-2">
+              {firstName}&apos;s recent watches
+            </p>
+            {recentActivity.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">No recent activity yet</p>
+            ) : (
               <div className="flex gap-2">
                 {recentActivity.map((item, i) => (
                   <motion.div
@@ -154,12 +157,9 @@ export default function InviteLanding({
                     )}
                   </motion.div>
                 ))}
-                {recentActivity.length === 0 && (
-                  <p className="text-xs text-muted-foreground italic">No recent activity yet</p>
-                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </motion.div>
 
         {/* Headline */}
@@ -195,7 +195,7 @@ export default function InviteLanding({
               className="flex items-center gap-3 rounded-xl border border-border/30 bg-card/40 px-4 py-3"
             >
               <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Icon className="h-4.5 w-4.5 text-primary h-4 w-4" />
+                <Icon className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-sm font-semibold">{title}</p>
@@ -230,7 +230,7 @@ export default function InviteLanding({
               </Link>
               <p className="text-center text-xs text-muted-foreground">
                 You&apos;re already signed in.{" "}
-                <Link href="/profile" className="text-primary hover:underline">
+                <Link href={`/profile/${inviterId}`} className="text-primary hover:underline">
                   Add {firstName} as a friend
                 </Link>
               </p>

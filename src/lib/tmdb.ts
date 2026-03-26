@@ -18,11 +18,17 @@ export function profileUrl(path: string | null, size = "w185") {
   return `${TMDB_IMAGE_BASE}/${size}${path}`;
 }
 
+const LOCALE_TO_TMDB_LANG: Record<string, string> = {
+  en: "en-US",
+  "pt-BR": "pt-BR",
+};
+const DEFAULT_TMDB_LANG = "pt-BR";
+
 async function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}, locale?: string): Promise<T> {
   const url = new URL(`${BASE_URL}${endpoint}`);
   url.searchParams.set("api_key", TMDB_API_KEY || "");
-  // Map next-intl locale to TMDB language code
-  const lang = locale === "en" ? "en-US" : "pt-BR";
+  // Map next-intl locale to TMDB language code; unknown locales fall back to default
+  const lang = (locale && LOCALE_TO_TMDB_LANG[locale]) ?? DEFAULT_TMDB_LANG;
   url.searchParams.set("language", lang);
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);

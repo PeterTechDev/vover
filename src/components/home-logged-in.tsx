@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 function getTitle(item: TMDBMediaItem) {
   return item.title || item.name || "Untitled";
@@ -126,6 +127,7 @@ interface Recommendation {
 }
 
 export function HomeLoggedIn({ userName }: { userName: string | null }) {
+  const t = useTranslations("Home");
   const { data: session, status } = useSession();
   const [trending, setTrending] = useState<TMDBMediaItem[]>([]);
   const [popularMovies, setPopularMovies] = useState<TMDBMediaItem[]>([]);
@@ -139,8 +141,8 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
   const [loadingPersonal, setLoadingPersonal] = useState(true);
 
   const greeting = userName
-    ? `Welcome back, ${userName.split(" ")[0]}`
-    : "Welcome back";
+    ? t("welcomeBack", { name: userName.split(" ")[0] })
+    : t("welcomeBackGeneric");
 
   useEffect(() => {
     fetch("/api/trending")
@@ -192,7 +194,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
       <section className="animate-slide-up mb-10">
         <div className="mb-6">
           <h1 className="mb-1 text-2xl font-bold md:text-3xl">{greeting}</h1>
-          <p className="text-muted-foreground">What are you in the mood for tonight?</p>
+          <p className="text-muted-foreground">{t("mood")}</p>
         </div>
         <div className="max-w-xl">
           <SearchBar large />
@@ -200,7 +202,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
       </section>
 
       <HorizontalSection
-        title="Up Next"
+        title={t("upNext")}
         icon={List}
         href="/watchlist"
         loading={loadingPersonal}
@@ -210,8 +212,8 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
               <List className="h-6 w-6" />
             </div>
             <div>
-              <p className="font-medium text-sm">Your watchlist is empty</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Browse trending titles below and start saving</p>
+              <p className="font-medium text-sm">{t("watchlistEmpty")}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{t("watchlistEmptyHint")}</p>
             </div>
           </div>
         }
@@ -224,7 +226,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
       </HorizontalSection>
 
       {(loadingPersonal || recommendations.length > 0) && (
-        <HorizontalSection title="Recommended For You" icon={Sparkles} href="/recommendations" loading={loadingPersonal}>
+        <HorizontalSection title={t("recommendedForYou")} icon={Sparkles} href="/recommendations" loading={loadingPersonal}>
           {recommendations.map((item) => (
             <div key={item.id} className="w-[140px] flex-shrink-0">
               <MediaCard
@@ -240,7 +242,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
       )}
 
       <HorizontalSection
-        title="Friends Are Watching"
+        title={t("friendsAreWatching")}
         icon={Users}
         href="/feed"
         loading={loadingPersonal}
@@ -250,10 +252,10 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
               <Users className="h-6 w-6" />
             </div>
             <div>
-              <p className="font-medium text-sm">No friend activity yet</p>
+              <p className="font-medium text-sm">{t("noFriendActivity")}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                <Link href="/profile" className="text-primary hover:underline underline-offset-2">Add friends</Link>{" "}
-                to see what they&apos;re watching
+                <Link href="/profile" className="text-primary hover:underline underline-offset-2">{t("addFriends")}</Link>{" "}
+                {t("addFriendsHint")}
               </p>
             </div>
           </div>
@@ -267,7 +269,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
       </HorizontalSection>
 
       {(loadingPersonal || recentlyWatched.length > 0) && (
-        <HorizontalSection title="Recently Watched" icon={Eye} href="/watched" loading={loadingPersonal}>
+        <HorizontalSection title={t("recentlyWatched")} icon={Eye} href="/watched" loading={loadingPersonal}>
           {recentlyWatched.map((item) => (
             <div key={item.id} className="w-[140px] flex-shrink-0">
               <MediaCard tmdbId={item.tmdb_id} mediaType={item.media_type} title={item.title} posterPath={item.poster_path} rating={item.rating} />
@@ -276,7 +278,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         </HorizontalSection>
       )}
 
-      <HorizontalSection title="Trending This Week" icon={TrendingUp} loading={loadingTrending}>
+      <HorizontalSection title={t("trendingThisWeek")} icon={TrendingUp} loading={loadingTrending}>
         {trending.map((item) => (
           <div key={`${item.media_type}-${item.id}`} className="w-[140px] flex-shrink-0">
             <MediaCard
@@ -291,7 +293,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         ))}
       </HorizontalSection>
 
-      <HorizontalSection title="Popular Movies" icon={Film} loading={loadingPopular}>
+      <HorizontalSection title={t("popularMovies")} icon={Film} loading={loadingPopular}>
         {popularMovies.map((item) => (
           <div key={item.id} className="w-[140px] flex-shrink-0">
             <MediaCard
@@ -306,7 +308,7 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         ))}
       </HorizontalSection>
 
-      <HorizontalSection title="Popular TV Shows" icon={Tv} loading={loadingPopular}>
+      <HorizontalSection title={t("popularTVShows")} icon={Tv} loading={loadingPopular}>
         {popularTV.map((item) => (
           <div key={item.id} className="w-[140px] flex-shrink-0">
             <MediaCard
@@ -324,14 +326,14 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
       {!loadingPersonal && watchlist.length === 0 && recentlyWatched.length === 0 && (
         <section className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-8 text-center">
           <Clapperboard className="mx-auto mb-3 h-10 w-10 text-primary" />
-          <h3 className="mb-2 font-semibold">You&apos;re all set up</h3>
+          <h3 className="mb-2 font-semibold">{t("allSetUp")}</h3>
           <p className="mb-4 text-sm text-muted-foreground">
-            Click any title above to add it to your watchlist or mark it as watched.
+            {t("allSetUpHint")}
           </p>
           <Link href="/profile">
             <Button variant="outline" className="gap-2">
               <Users className="h-4 w-4" />
-              Add Friends
+              {t("addFriendsBtn")}
             </Button>
           </Link>
         </section>
