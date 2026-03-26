@@ -192,3 +192,7 @@ export async function getMovieRecommendations(id: number): Promise<TMDBSearchRes
 export async function getTVRecommendations(id: number): Promise<TMDBSearchResult> {
   return tmdbFetch<TMDBSearchResult>(`/tv/${id}/recommendations`);
 }
+
+export async function getPopular(mediaType: "movie" | "tv", page = 1): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/${mediaType}/popular`, { page: String(page) });
+}

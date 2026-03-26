@@ -19,6 +19,8 @@ import {
   Users,
   ArrowRight,
   Clapperboard,
+  Film,
+  Tv,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -84,48 +86,6 @@ function HorizontalSection({
   );
 }
 
-function GridSection({
-  title,
-  icon: Icon,
-  href,
-  children,
-  loading,
-}: {
-  title: string;
-  icon: React.ElementType;
-  href?: string;
-  children: React.ReactNode;
-  loading?: boolean;
-}) {
-  return (
-    <section className="mb-10">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Icon className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">{title}</h2>
-        </div>
-        {href && (
-          <Link href={href}>
-            <Button variant="ghost" size="sm" className="gap-1 text-primary/80 hover:text-primary">
-              See all <ArrowRight className="h-3.5 w-3.5" />
-            </Button>
-          </Link>
-        )}
-      </div>
-      {loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="aspect-[2/3] rounded-lg animate-shimmer" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {children}
-        </div>
-      )}
-    </section>
-  );
-}
 
 interface WatchlistItem {
   id: string;
@@ -168,11 +128,14 @@ interface Recommendation {
 export function HomeLoggedIn({ userName }: { userName: string | null }) {
   const { data: session, status } = useSession();
   const [trending, setTrending] = useState<TMDBMediaItem[]>([]);
+  const [popularMovies, setPopularMovies] = useState<TMDBMediaItem[]>([]);
+  const [popularTV, setPopularTV] = useState<TMDBMediaItem[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [recentlyWatched, setRecentlyWatched] = useState<WatchedItem[]>([]);
   const [friendsWatching, setFriendsWatching] = useState<FeedEntry[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loadingTrending, setLoadingTrending] = useState(true);
+  const [loadingPopular, setLoadingPopular] = useState(true);
   const [loadingPersonal, setLoadingPersonal] = useState(true);
 
   const greeting = userName
@@ -186,11 +149,21 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         setTrending(
           (data.results as TMDBMediaItem[])
             .filter((r) => r.media_type === "movie" || r.media_type === "tv")
-            .slice(0, 12)
+            .slice(0, 14)
         );
       })
       .catch(() => {/* leave trending empty on error */})
       .finally(() => setLoadingTrending(false));
+  }, []);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/popular?type=movie").then((r) => (r.ok ? r.json() : { results: [] })),
+      fetch("/api/popular?type=tv").then((r) => (r.ok ? r.json() : { results: [] })),
+    ]).then(([moviesData, tvData]) => {
+      setPopularMovies((moviesData.results as TMDBMediaItem[]).slice(0, 14));
+      setPopularTV((tvData.results as TMDBMediaItem[]).slice(0, 14));
+    }).catch(() => {}).finally(() => setLoadingPopular(false));
   }, []);
 
   useEffect(() => {
@@ -303,19 +276,50 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         </HorizontalSection>
       )}
 
-      <GridSection title="Trending This Week" icon={TrendingUp} href="/discover" loading={loadingTrending}>
+      <HorizontalSection title="Trending This Week" icon={TrendingUp} loading={loadingTrending}>
         {trending.map((item) => (
-          <MediaCard
-            key={`${item.media_type}-${item.id}`}
-            tmdbId={item.id}
-            mediaType={getMediaType(item)}
-            title={getTitle(item)}
-            posterPath={item.poster_path}
-            voteAverage={item.vote_average}
-            year={getYear(item)}
-          />
+          <div key={`${item.media_type}-${item.id}`} className="w-[140px] flex-shrink-0">
+            <MediaCard
+              tmdbId={item.id}
+              mediaType={getMediaType(item)}
+              title={getTitle(item)}
+              posterPath={item.poster_path}
+              voteAverage={item.vote_average}
+              year={getYear(item)}
+            />
+          </div>
         ))}
-      </GridSection>
+      </HorizontalSection>
+
+      <HorizontalSection title="Popular Movies" icon={Film} loading={loadingPopular}>
+        {popularMovies.map((item) => (
+          <div key={item.id} className="w-[140px] flex-shrink-0">
+            <MediaCard
+              tmdbId={item.id}
+              mediaType="movie"
+              title={getTitle(item)}
+              posterPath={item.poster_path}
+              voteAverage={item.vote_average}
+              year={getYear(item)}
+            />
+          </div>
+        ))}
+      </HorizontalSection>
+
+      <HorizontalSection title="Popular TV Shows" icon={Tv} loading={loadingPopular}>
+        {popularTV.map((item) => (
+          <div key={item.id} className="w-[140px] flex-shrink-0">
+            <MediaCard
+              tmdbId={item.id}
+              mediaType="tv"
+              title={getTitle(item)}
+              posterPath={item.poster_path}
+              voteAverage={item.vote_average}
+              year={getYear(item)}
+            />
+          </div>
+        ))}
+      </HorizontalSection>
 
       {!loadingPersonal && watchlist.length === 0 && recentlyWatched.length === 0 && (
         <section className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-8 text-center">
