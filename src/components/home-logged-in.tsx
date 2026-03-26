@@ -221,6 +221,53 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
         </div>
       </section>
 
+      {/* Public content first — always has data, great for new users */}
+      <HorizontalSection title={t("trendingThisWeek")} icon={TrendingUp} loading={loadingTrending}>
+        {trending.map((item) => (
+          <div key={`${item.media_type}-${item.id}`} className="w-[140px] flex-shrink-0">
+            <MediaCard
+              tmdbId={item.id}
+              mediaType={getMediaType(item)}
+              title={getTitle(item)}
+              posterPath={item.poster_path}
+              voteAverage={item.vote_average}
+              year={getYear(item)}
+            />
+          </div>
+        ))}
+      </HorizontalSection>
+
+      <HorizontalSection title={t("popularMovies")} icon={Film} loading={loadingPopular}>
+        {popularMovies.map((item) => (
+          <div key={item.id} className="w-[140px] flex-shrink-0">
+            <MediaCard
+              tmdbId={item.id}
+              mediaType="movie"
+              title={getTitle(item)}
+              posterPath={item.poster_path}
+              voteAverage={item.vote_average}
+              year={getYear(item)}
+            />
+          </div>
+        ))}
+      </HorizontalSection>
+
+      <HorizontalSection title={t("popularTVShows")} icon={Tv} loading={loadingPopular}>
+        {popularTV.map((item) => (
+          <div key={item.id} className="w-[140px] flex-shrink-0">
+            <MediaCard
+              tmdbId={item.id}
+              mediaType="tv"
+              title={getTitle(item)}
+              posterPath={item.poster_path}
+              voteAverage={item.vote_average}
+              year={getYear(item)}
+            />
+          </div>
+        ))}
+      </HorizontalSection>
+
+      {/* Personal content after — may be empty for new users */}
       <HorizontalSection
         title={t("upNext")}
         icon={List}
@@ -297,51 +344,6 @@ export function HomeLoggedIn({ userName }: { userName: string | null }) {
           ))}
         </HorizontalSection>
       )}
-
-      <HorizontalSection title={t("trendingThisWeek")} icon={TrendingUp} loading={loadingTrending}>
-        {trending.map((item) => (
-          <div key={`${item.media_type}-${item.id}`} className="w-[140px] flex-shrink-0">
-            <MediaCard
-              tmdbId={item.id}
-              mediaType={getMediaType(item)}
-              title={getTitle(item)}
-              posterPath={item.poster_path}
-              voteAverage={item.vote_average}
-              year={getYear(item)}
-            />
-          </div>
-        ))}
-      </HorizontalSection>
-
-      <HorizontalSection title={t("popularMovies")} icon={Film} loading={loadingPopular}>
-        {popularMovies.map((item) => (
-          <div key={item.id} className="w-[140px] flex-shrink-0">
-            <MediaCard
-              tmdbId={item.id}
-              mediaType="movie"
-              title={getTitle(item)}
-              posterPath={item.poster_path}
-              voteAverage={item.vote_average}
-              year={getYear(item)}
-            />
-          </div>
-        ))}
-      </HorizontalSection>
-
-      <HorizontalSection title={t("popularTVShows")} icon={Tv} loading={loadingPopular}>
-        {popularTV.map((item) => (
-          <div key={item.id} className="w-[140px] flex-shrink-0">
-            <MediaCard
-              tmdbId={item.id}
-              mediaType="tv"
-              title={getTitle(item)}
-              posterPath={item.poster_path}
-              voteAverage={item.vote_average}
-              year={getYear(item)}
-            />
-          </div>
-        ))}
-      </HorizontalSection>
 
       {!loadingPersonal && watchlist.length === 0 && recentlyWatched.length === 0 && (
         <section className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-8 text-center">
