@@ -7,6 +7,8 @@ import { ServiceWorkerRegister } from "@/components/sw-register";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getLocale } from "next-intl/server";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -59,8 +61,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark">
       <head>
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -75,14 +79,16 @@ export default async function RootLayout({
         >
           Skip to content
         </a>
-        <SessionProvider session={session}>
-          <Navbar />
-          <main id="main-content" className="min-h-screen pt-16">{children}</main>
-          <Footer isLoggedIn={!!session} />
-          <Toaster theme="dark" position="bottom-right" richColors />
-          <ServiceWorkerRegister />
-          <PWAInstallPrompt />
-        </SessionProvider>
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <SessionProvider session={session}>
+            <Navbar />
+            <main id="main-content" className="min-h-screen pt-16">{children}</main>
+            <Footer isLoggedIn={!!session} />
+            <Toaster theme="dark" position="bottom-right" richColors />
+            <ServiceWorkerRegister />
+            <PWAInstallPrompt />
+          </SessionProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

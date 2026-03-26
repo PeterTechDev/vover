@@ -19,22 +19,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSession, signOut } from "next-auth/react";
+import { useTranslations, useLocale } from "next-intl";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
-const navLinks = [
-  { href: "/", label: "Discover", icon: Film },
-  { href: "/recommendations", label: "For You", icon: Sparkles },
-  { href: "/watchlist", label: "Watchlist", icon: List },
-  { href: "/lists", label: "Lists", icon: ListChecks },
-  { href: "/watched", label: "Watched", icon: Eye },
-  { href: "/feed", label: "Feed", icon: Rss },
-  { href: "/stats", label: "Stats", icon: BarChart2 },
-];
+const navLinkKeys = [
+  { href: "/", key: "discover", icon: Film },
+  { href: "/recommendations", key: "forYou", icon: Sparkles },
+  { href: "/watchlist", key: "watchlist", icon: List },
+  { href: "/lists", key: "lists", icon: ListChecks },
+  { href: "/watched", key: "watched", icon: Eye },
+  { href: "/feed", key: "feed", icon: Rss },
+  { href: "/stats", key: "stats", icon: BarChart2 },
+] as const;
 
-const authLinks = [
-  { href: "/", label: "Discover", icon: Film },
-  { href: "/feed", label: "Feed", icon: Rss },
-  { href: "/stats", label: "Stats", icon: BarChart2 },
-];
+const authLinkKeys = [
+  { href: "/", key: "discover", icon: Film },
+  { href: "/feed", key: "feed", icon: Rss },
+  { href: "/stats", key: "stats", icon: BarChart2 },
+] as const;
 
 function getInitials(name: string | null | undefined, email: string | null | undefined): string {
   if (name) {
@@ -54,6 +56,8 @@ export function Navbar() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const { data: session, status } = useSession();
+  const t = useTranslations("Navbar");
+  const locale = useLocale();
 
   const user = session?.user ?? null;
   const authLoaded = status !== "loading";
@@ -64,7 +68,7 @@ export function Navbar() {
     setOpen(false);
   }
 
-  const links = user ? navLinks : authLinks;
+  const linkKeys = user ? navLinkKeys : authLinkKeys;
   const initials = getInitials(user?.name, user?.email);
 
   return (
@@ -83,7 +87,7 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {links.map((link) => {
+          {linkKeys.map((link) => {
             const Icon = link.icon;
             const isActive =
               pathname === link.href ||
@@ -100,15 +104,16 @@ export function Navbar() {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {link.label}
+                  {t(link.key)}
                 </Button>
               </Link>
             );
           })}
         </nav>
 
-        {/* Desktop right: avatar or sign-in */}
-        <div className="hidden items-center gap-2 md:flex">
+        {/* Desktop right: language switcher + avatar or sign-in */}
+        <div className="hidden items-center gap-1 md:flex">
+          <LanguageSwitcher currentLocale={locale} />
           {authLoaded && (
             user ? (
               <DropdownMenu>
@@ -117,10 +122,10 @@ export function Navbar() {
                     variant="ghost"
                     size="sm"
                     className="gap-2 px-2 text-muted-foreground hover:text-foreground focus-visible:ring-1 focus-visible:ring-primary"
-                    aria-label="User menu"
+                    aria-label={t("userMenu")}
                   >
                     <Avatar className="h-7 w-7">
-                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? "Profile"} />
+                      <AvatarImage src={user.image ?? undefined} alt={user.name ?? t("profile")} />
                       <AvatarFallback className="bg-primary/20 text-primary text-xs font-semibold">
                         {initials}
                       </AvatarFallback>
@@ -143,7 +148,7 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      Profile
+                      {t("profile")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -152,7 +157,7 @@ export function Navbar() {
                     className="cursor-pointer text-destructive focus:text-destructive"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    {t("signOut")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -160,7 +165,7 @@ export function Navbar() {
               <Link href="/auth">
                 <Button size="sm" className="gap-2">
                   <LogIn className="h-4 w-4" />
-                  Sign In
+                  {t("signIn")}
                 </Button>
               </Link>
             ) : null
@@ -170,7 +175,7 @@ export function Navbar() {
         {/* Mobile hamburger */}
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" aria-label="Open menu">
+            <Button variant="ghost" size="icon" aria-label={t("openMenu")}>
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
@@ -181,7 +186,7 @@ export function Navbar() {
             {user && (
               <div className="mt-6 mb-2 flex items-center gap-3 px-2 py-3 rounded-lg bg-card/50 border border-border/30">
                 <Avatar className="h-9 w-9 flex-shrink-0">
-                  <AvatarImage src={user.image ?? undefined} alt={user.name ?? "Profile"} />
+                  <AvatarImage src={user.image ?? undefined} alt={user.name ?? t("profile")} />
                   <AvatarFallback className="bg-primary/20 text-primary text-sm font-semibold">
                     {initials}
                   </AvatarFallback>
@@ -198,7 +203,7 @@ export function Navbar() {
             )}
 
             <nav className="mt-4 flex flex-col gap-1">
-              {links.map((link) => {
+              {linkKeys.map((link) => {
                 const Icon = link.icon;
                 const isActive =
                   pathname === link.href ||
@@ -217,7 +222,7 @@ export function Navbar() {
                       )}
                     >
                       <Icon className="h-4 w-4" />
-                      {link.label}
+                      {t(link.key)}
                     </Button>
                   </Link>
                 );
@@ -234,7 +239,7 @@ export function Navbar() {
                     )}
                   >
                     <User className="h-4 w-4" />
-                    Profile
+                    {t("profile")}
                   </Button>
                 </Link>
               )}
@@ -247,16 +252,20 @@ export function Navbar() {
                     onClick={handleSignOut}
                   >
                     <LogOut className="h-4 w-4" />
-                    Sign Out
+                    {t("signOut")}
                   </Button>
                 ) : (
                   <Link href="/auth" onClick={() => setOpen(false)}>
                     <Button className="w-full gap-2">
                       <LogIn className="h-4 w-4" />
-                      Sign In
+                      {t("signIn")}
                     </Button>
                   </Link>
                 )}
+              </div>
+
+              <div className="mt-2 flex justify-center">
+                <LanguageSwitcher currentLocale={locale} />
               </div>
             </nav>
           </SheetContent>
