@@ -4,10 +4,11 @@ import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Star, Film, Users, Sparkles, ArrowRight } from "lucide-react";
+import { Star, Film, Users, Sparkles, ArrowRight, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { posterUrl } from "@/lib/tmdb";
+import { useSession } from "next-auth/react";
 
 interface RecentItem {
   title: string;
@@ -50,6 +51,9 @@ export default function InviteLanding({
   inviteUses,
   recentActivity,
 }: Props) {
+  const { data: session, status } = useSession();
+  const isLoggedIn = status !== "loading" && !!session?.user;
+
   // Store invite code in cookie (client side fallback)
   useEffect(() => {
     document.cookie = `pending_invite_code=${code}; max-age=${60 * 60 * 24}; path=/; samesite=lax`;
@@ -216,18 +220,37 @@ export default function InviteLanding({
       {/* Fixed CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/85 backdrop-blur-lg border-t border-border/30 px-4 py-4">
         <div className="max-w-md mx-auto space-y-2">
-          <Link href={`/auth?invite=${code}`}>
-            <Button className="w-full h-12 font-semibold text-base gap-2 shadow-xl shadow-primary/25">
-              Join {firstName} on Vover
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <p className="text-center text-xs text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/auth" className="text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
+          {isLoggedIn ? (
+            <>
+              <Link href="/">
+                <Button className="w-full h-12 font-semibold text-base gap-2 shadow-xl shadow-primary/25">
+                  <Home className="h-4 w-4" />
+                  Go to Vover
+                </Button>
+              </Link>
+              <p className="text-center text-xs text-muted-foreground">
+                You&apos;re already signed in.{" "}
+                <Link href="/profile" className="text-primary hover:underline">
+                  Add {firstName} as a friend
+                </Link>
+              </p>
+            </>
+          ) : (
+            <>
+              <Link href={`/auth?invite=${code}`}>
+                <Button className="w-full h-12 font-semibold text-base gap-2 shadow-xl shadow-primary/25">
+                  Join {firstName} on Vover
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <p className="text-center text-xs text-muted-foreground">
+                Already have an account?{" "}
+                <Link href="/auth" className="text-primary hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
