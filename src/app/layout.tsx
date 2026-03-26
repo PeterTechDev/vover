@@ -75,7 +75,7 @@ export default async function RootLayout({
         >
           Skip to content
         </a>
-        <SessionProvider>
+        <SessionProvider session={session}>
           <Navbar />
           <main id="main-content" className="min-h-screen pt-16">{children}</main>
           <Footer isLoggedIn={!!session} />
