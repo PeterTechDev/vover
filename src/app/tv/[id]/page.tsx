@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Image from "next/image";
+import { cookies } from "next/headers";
 import {
   getTVShow,
   getTVCredits,
@@ -50,19 +51,22 @@ export default async function TVDetailPage({
   const id = Number(params.id);
   if (isNaN(id)) notFound();
 
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value ?? "pt-BR";
+
   let show;
   try {
-    show = await getTVShow(id);
+    show = await getTVShow(id, locale);
   } catch {
     notFound();
   }
 
   const [creditsResult, videosResult, providersResult, similarResult, recommendationsResult] = await Promise.allSettled([
-    getTVCredits(id),
-    getTVVideos(id),
+    getTVCredits(id, locale),
+    getTVVideos(id, locale),
     getTVWatchProviders(id),
-    getSimilarTV(id),
-    getTVRecommendations(id),
+    getSimilarTV(id, locale),
+    getTVRecommendations(id, locale),
   ]);
 
   const credits = creditsResult.status === "fulfilled" ? creditsResult.value : null;

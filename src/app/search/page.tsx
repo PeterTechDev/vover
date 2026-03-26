@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { SearchBar } from "@/components/search-bar";
 import { MediaCard } from "@/components/media-card";
+import { cookies } from "next/headers";
 import { searchMulti, type TMDBMediaItem } from "@/lib/tmdb";
 import { SearchX, Search } from "lucide-react";
 
@@ -44,7 +45,9 @@ export default async function SearchPage({
 
   if (query) {
     try {
-      const data = await searchMulti(query, page);
+      const cookieStore = await cookies();
+      const locale = cookieStore.get("NEXT_LOCALE")?.value ?? "pt-BR";
+      const data = await searchMulti(query, page, locale);
       results = data.results.filter(
         (r) => r.media_type === "movie" || r.media_type === "tv"
       );

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Image from "next/image";
+import { cookies } from "next/headers";
 import {
   getMovie,
   getMovieCredits,
@@ -50,20 +51,23 @@ export default async function MovieDetailPage({
   const id = Number(params.id);
   if (isNaN(id)) notFound();
 
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("NEXT_LOCALE")?.value ?? "pt-BR";
+
   let movie;
   try {
-    movie = await getMovie(id);
+    movie = await getMovie(id, locale);
   } catch {
     notFound();
   }
 
   // Fetch supporting data in parallel (gracefully degrade)
   const [creditsResult, videosResult, providersResult, similarResult, recommendationsResult] = await Promise.allSettled([
-    getMovieCredits(id),
-    getMovieVideos(id),
+    getMovieCredits(id, locale),
+    getMovieVideos(id, locale),
     getMovieWatchProviders(id),
-    getSimilarMovies(id),
-    getMovieRecommendations(id),
+    getSimilarMovies(id, locale),
+    getMovieRecommendations(id, locale),
   ]);
 
   const credits = creditsResult.status === "fulfilled" ? creditsResult.value : null;

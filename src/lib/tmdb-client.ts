@@ -8,9 +8,18 @@ export type { TMDBMediaItem, TMDBSearchResult } from "./tmdb";
 const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
 
+function getLocaleFromCookie(): string {
+  if (typeof document === "undefined") return "pt-BR";
+  const match = document.cookie.match(/NEXT_LOCALE=([^;]+)/);
+  return match?.[1] ?? "pt-BR";
+}
+
 async function tmdbFetchClient<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
   const url = new URL(`${BASE_URL}${endpoint}`);
   url.searchParams.set("api_key", TMDB_API_KEY || "");
+  // Auto-detect locale from cookie for content language
+  const locale = getLocaleFromCookie();
+  url.searchParams.set("language", locale === "en" ? "en-US" : "pt-BR");
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
   }

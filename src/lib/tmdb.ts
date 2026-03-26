@@ -18,9 +18,12 @@ export function profileUrl(path: string | null, size = "w185") {
   return `${TMDB_IMAGE_BASE}/${size}${path}`;
 }
 
-async function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Promise<T> {
+async function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}, locale?: string): Promise<T> {
   const url = new URL(`${BASE_URL}${endpoint}`);
   url.searchParams.set("api_key", TMDB_API_KEY || "");
+  // Map next-intl locale to TMDB language code
+  const lang = locale === "en" ? "en-US" : "pt-BR";
+  url.searchParams.set("language", lang);
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
   }
@@ -137,36 +140,36 @@ export interface TMDBWatchProvidersResult {
   }>;
 }
 
-export async function searchMulti(query: string, page = 1): Promise<TMDBSearchResult> {
-  return tmdbFetch<TMDBSearchResult>("/search/multi", { query, page: String(page) });
+export async function searchMulti(query: string, page = 1, locale?: string): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>("/search/multi", { query, page: String(page) }, locale);
 }
 
-export async function getMovie(id: number): Promise<TMDBMovieDetail> {
-  return tmdbFetch<TMDBMovieDetail>(`/movie/${id}`);
+export async function getMovie(id: number, locale?: string): Promise<TMDBMovieDetail> {
+  return tmdbFetch<TMDBMovieDetail>(`/movie/${id}`, {}, locale);
 }
 
-export async function getTVShow(id: number): Promise<TMDBTVDetail> {
-  return tmdbFetch<TMDBTVDetail>(`/tv/${id}`);
+export async function getTVShow(id: number, locale?: string): Promise<TMDBTVDetail> {
+  return tmdbFetch<TMDBTVDetail>(`/tv/${id}`, {}, locale);
 }
 
-export async function getTrending(mediaType: "movie" | "tv" | "all" = "all", timeWindow: "day" | "week" = "week"): Promise<TMDBSearchResult> {
-  return tmdbFetch<TMDBSearchResult>(`/trending/${mediaType}/${timeWindow}`);
+export async function getTrending(mediaType: "movie" | "tv" | "all" = "all", timeWindow: "day" | "week" = "week", locale?: string): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/trending/${mediaType}/${timeWindow}`, {}, locale);
 }
 
-export async function getMovieCredits(id: number): Promise<TMDBCredits> {
-  return tmdbFetch<TMDBCredits>(`/movie/${id}/credits`);
+export async function getMovieCredits(id: number, locale?: string): Promise<TMDBCredits> {
+  return tmdbFetch<TMDBCredits>(`/movie/${id}/credits`, {}, locale);
 }
 
-export async function getTVCredits(id: number): Promise<TMDBCredits> {
-  return tmdbFetch<TMDBCredits>(`/tv/${id}/credits`);
+export async function getTVCredits(id: number, locale?: string): Promise<TMDBCredits> {
+  return tmdbFetch<TMDBCredits>(`/tv/${id}/credits`, {}, locale);
 }
 
-export async function getMovieVideos(id: number): Promise<TMDBVideosResult> {
-  return tmdbFetch<TMDBVideosResult>(`/movie/${id}/videos`);
+export async function getMovieVideos(id: number, locale?: string): Promise<TMDBVideosResult> {
+  return tmdbFetch<TMDBVideosResult>(`/movie/${id}/videos`, {}, locale);
 }
 
-export async function getTVVideos(id: number): Promise<TMDBVideosResult> {
-  return tmdbFetch<TMDBVideosResult>(`/tv/${id}/videos`);
+export async function getTVVideos(id: number, locale?: string): Promise<TMDBVideosResult> {
+  return tmdbFetch<TMDBVideosResult>(`/tv/${id}/videos`, {}, locale);
 }
 
 export async function getMovieWatchProviders(id: number): Promise<TMDBWatchProvidersResult> {
@@ -177,22 +180,22 @@ export async function getTVWatchProviders(id: number): Promise<TMDBWatchProvider
   return tmdbFetch<TMDBWatchProvidersResult>(`/tv/${id}/watch/providers`);
 }
 
-export async function getSimilarMovies(id: number): Promise<TMDBSearchResult> {
-  return tmdbFetch<TMDBSearchResult>(`/movie/${id}/similar`);
+export async function getSimilarMovies(id: number, locale?: string): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/movie/${id}/similar`, {}, locale);
 }
 
-export async function getSimilarTV(id: number): Promise<TMDBSearchResult> {
-  return tmdbFetch<TMDBSearchResult>(`/tv/${id}/similar`);
+export async function getSimilarTV(id: number, locale?: string): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/tv/${id}/similar`, {}, locale);
 }
 
-export async function getMovieRecommendations(id: number): Promise<TMDBSearchResult> {
-  return tmdbFetch<TMDBSearchResult>(`/movie/${id}/recommendations`);
+export async function getMovieRecommendations(id: number, locale?: string): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/movie/${id}/recommendations`, {}, locale);
 }
 
-export async function getTVRecommendations(id: number): Promise<TMDBSearchResult> {
-  return tmdbFetch<TMDBSearchResult>(`/tv/${id}/recommendations`);
+export async function getTVRecommendations(id: number, locale?: string): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/tv/${id}/recommendations`, {}, locale);
 }
 
-export async function getPopular(mediaType: "movie" | "tv", page = 1): Promise<TMDBSearchResult> {
-  return tmdbFetch<TMDBSearchResult>(`/${mediaType}/popular`, { page: String(page) });
+export async function getPopular(mediaType: "movie" | "tv", page = 1, locale?: string): Promise<TMDBSearchResult> {
+  return tmdbFetch<TMDBSearchResult>(`/${mediaType}/popular`, { page: String(page) }, locale);
 }

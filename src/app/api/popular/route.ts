@@ -7,7 +7,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "type must be movie or tv" }, { status: 400 });
   }
   try {
-    const data = await getPopular(type);
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const locale = cookieStore.get("NEXT_LOCALE")?.value ?? "pt-BR";
+    const data = await getPopular(type, 1, locale);
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ results: [] }, { status: 500 });

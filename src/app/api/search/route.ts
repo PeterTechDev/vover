@@ -9,7 +9,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const data = await searchMulti(q);
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const locale = cookieStore.get("NEXT_LOCALE")?.value ?? "pt-BR";
+    const data = await searchMulti(q, 1, locale);
 
     // Filter to movie/tv only, take max 6
     const results = data.results
