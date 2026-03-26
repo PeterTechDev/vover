@@ -68,14 +68,7 @@ export function MediaCard({
           </div>
         </div>
 
-        {/* Recommended-by badge */}
-        {recommendedBy && (
-          <div className="absolute inset-x-0 bottom-0 px-2 pb-2 opacity-0 transition-opacity duration-300 group-hover:opacity-0">
-            <span className="inline-flex max-w-full items-center gap-1 truncate rounded-full bg-primary/85 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
-              From {recommendedBy}
-            </span>
-          </div>
-        )}
+
       </div>
 
       {/* Card info below poster */}
