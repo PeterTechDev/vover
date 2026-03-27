@@ -27,19 +27,31 @@ export async function generateMetadata({
   if (isNaN(id)) return { title: "TV Show" };
   try {
     const show = await getTVShow(id);
+    const year = show.first_air_date ? ` (${show.first_air_date.slice(0, 4)})` : "";
+    const fullTitle = `${show.name}${year} — Vover`;
+    const description = show.overview?.slice(0, 160) || `Watch ${show.name} on Vover.`;
+    const posterImage = show.poster_path
+      ? `https://image.tmdb.org/t/p/w500${show.poster_path}`
+      : undefined;
+
     return {
-      title: show.name,
-      description: show.overview?.slice(0, 160) || `Watch ${show.name} on Vover.`,
+      title: fullTitle,
+      description,
       openGraph: {
-        title: show.name,
-        description: show.overview?.slice(0, 160) || undefined,
-        images: show.poster_path
-          ? [`https://image.tmdb.org/t/p/w500${show.poster_path}`]
-          : undefined,
+        title: fullTitle,
+        description,
+        images: posterImage ? [{ url: posterImage }] : undefined,
+        type: "video.tv_show",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: fullTitle,
+        description,
+        images: posterImage ? [posterImage] : undefined,
       },
     };
   } catch {
-    return { title: "TV Show" };
+    return { title: "TV Show — Vover" };
   }
 }
 

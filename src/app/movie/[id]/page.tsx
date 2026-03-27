@@ -27,19 +27,31 @@ export async function generateMetadata({
   if (isNaN(id)) return { title: "Movie" };
   try {
     const movie = await getMovie(id);
+    const year = movie.release_date ? ` (${movie.release_date.slice(0, 4)})` : "";
+    const fullTitle = `${movie.title}${year} — Vover`;
+    const description = movie.overview?.slice(0, 160) || `Watch ${movie.title} on Vover.`;
+    const posterImage = movie.poster_path
+      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+      : undefined;
+
     return {
-      title: movie.title,
-      description: movie.overview?.slice(0, 160) || `Watch ${movie.title} on Vover.`,
+      title: fullTitle,
+      description,
       openGraph: {
-        title: movie.title,
-        description: movie.overview?.slice(0, 160) || undefined,
-        images: movie.poster_path
-          ? [`https://image.tmdb.org/t/p/w500${movie.poster_path}`]
-          : undefined,
+        title: fullTitle,
+        description,
+        images: posterImage ? [{ url: posterImage }] : undefined,
+        type: "video.movie",
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: fullTitle,
+        description,
+        images: posterImage ? [posterImage] : undefined,
       },
     };
   } catch {
-    return { title: "Movie" };
+    return { title: "Movie — Vover" };
   }
 }
 
